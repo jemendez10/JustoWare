@@ -1,0 +1,4 @@
+cmd
+cd C:\JustoWare
+.\venv\Scripts\activate
+python3 manage.py shell < .\MigrarDeZeppelin\Importacion.py

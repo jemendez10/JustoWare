@@ -24,7 +24,7 @@ OPC_CLASEDOC  = (
 
 OPC_REGIMEN  = (
         ('48', 'Responsable'),
-        ('99', 'No Responsable'),
+        ('49', 'No Responsable'),
         ('Comun', 'Comun'),
     )
 
@@ -43,6 +43,32 @@ OPC_PRODUCTO  = (
         ('CO', 'Contable'),
         ('BA', 'Bancos'),
     )
+
+OPC_EDUCACION = (
+    ('0','No Aplica'),
+    ('1','Primaria'),
+    ('2','Bachiller'),
+    ('3','Tecnico'),
+    ('4','Tecnologo'),
+    ('5','Profesional'),
+    ('6','Post Grado'),
+    ('7','Maestria'),
+    ('8','Doctorado'),
+    ('9','Otros'),
+)
+
+OPC_PARENTESCO = (
+    ('0','No Aplica'),
+    ('1','Esposo(a)'),
+    ('2','Hijo(a)'),
+    ('3','Padre o Madre'),
+    ('4','Abuelo(a)'),
+    ('5','Nieto(a)'),
+    ('6','Tio(a)'),
+    ('7','Sobrino(a)'),
+    ('8','Primo(a)'),
+    ('9','Otro'),
+) 
 
 OPC_CANALES  = (
         ('ATM', 'Red de Cajeros'),
@@ -132,6 +158,40 @@ OPC_EST_CRE = (
         ('C', 'Cancelado'),
         ('T', 'Terminado Cupo'),
     )
+
+OPC_MODALIDAD_CRE = (
+    ('A','Admisible'),
+    ('C','Comercial'),
+    ('M','MicroCredito'),
+    ('V','Vivienda')
+)
+
+OPC_GARANTIA = (
+    ('A','Admisible'),
+    ('H','Hipotecaria'),
+    ('D','Deudor Solidario'),
+    ('Otros'),
+)
+
+OPC_OCUPACION = (
+    ('1','Asalariado'),
+    ('2','Pensionado'),
+    ('3','Rentista'),
+    ('4','Trabajador asociado'),
+    ('5','Profesional independiente'),
+    ('6','Empleado informal'),
+    ('7','Independiente formal'),
+    ('8','Independiente informal'),
+    ('9','Independiente agro'),
+    ('10','Empleado doméstico'),
+    ('11','Estudiante'),
+)
+
+OPC_TIPO_VIVIENDA = (
+	('1','Propia'),
+	('2','Familiar'),	
+	('3','Arrendada'),
+)
 
 class CLIENTES(models.Model):
     id = models.SmallAutoField(primary_key=True)
@@ -241,6 +301,8 @@ class ASOCIADOS(models.Model):
     class Meta:
         unique_together = [['oficina','cod_aso']]
         db_table = 'asociados'
+
+
 
 class DOCTO_CONTA(models.Model):
     id = models.AutoField(primary_key=True)
@@ -513,7 +575,7 @@ class CREDITOS(models.Model):
     libranza = models.CharField(max_length=10,null = True)
     pagare = models.CharField(max_length=10,null = True)
     termino = models.CharField(max_length=1, choices=OPC_CRE_TERMINO)
-    por_pag = models.CharField(max_length=1, choices=OPC_CRE_FOR_PAG)
+    for_pag = models.CharField(max_length=1, choices=OPC_CRE_FOR_PAG)
     fec_des = models.DateField()
     fec_pag_ini = models.DateField()
     fec_ree = models.DateField()
