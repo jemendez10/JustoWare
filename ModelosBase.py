@@ -10,7 +10,7 @@ def validate_numeric(value):
     if not re.match(r'^[0-9]+$', value):
         raise ValidationError('El número de celular debe contener solo dígitos numéricos.')
     
-OPC_BOOL = [('S','Si'),('N','No')]
+OPC_BOOL = (('S','Si'),('N','No'))
 
 OPC_CLASEDOC  = (
         ('C', 'Cédula de Ciudadanía'),
@@ -37,7 +37,7 @@ OPC_TIPTER  = (
 OPC_PRODUCTO  = (
         ('AP', 'Aportes'),
         ('AH', 'Ahorros'),
-        ('CR', 'Creditos'),
+        ('CR', 'Créditos'),
         ('CC', 'Cuenta por Cobrar'),
         ('CP', 'Cuenta por Pagar'),
         ('CO', 'Contable'),
@@ -49,7 +49,7 @@ OPC_CANALES  = (
         ('POS', 'Compras en Comercios'),
         ('IVR', 'Audio Respuesta'),
         ('TRA', 'Transferencia'),
-        ('CON', 'Consignacion'),
+        ('CON', 'Consignación'),
         ('EFE', 'Efectivo'),
         ('CHE', 'Cheque'),
         ('GIR', 'Giro'),
@@ -134,21 +134,17 @@ OPC_EST_CRE = (
     )
 
 class CLIENTES(models.Model):
-    id = models.SmallAutoField(primary_key=True)
-    codigo = models.CharField(max_length=1, null=False)
-    doc_ide = models.CharField(max_length=12,
-        validators=[validate_numeric],
-        help_text='el documento de identidad debe ser numerico.',
-        null=True
-    )
+    id_cl = models.SmallAutoField(primary_key=True)
+    codigo = models.CharField(max_length=2, null=False)
     sigla = models.CharField(max_length=36)
     nombre = models.CharField(max_length=120)
-    celular = models.CharField(
-        max_length=10,
-        validators=[validate_numeric],
-        help_text='El número de celular debe contener exactamente 10 dígitos numéricos.',
-        null=True
-    )
+    doc_ide = models.CharField(max_length=12,validators=[validate_numeric],
+                               help_text='el documento de identidad debe ser numerico.',
+                               null=True)
+    
+    celular = models.CharField(max_length=10,validators=[validate_numeric],
+                               help_text='El número de celular debe contener exactamente 10 dígitos numéricos.', 
+                               null=True)
     email = models.EmailField()
     dominio = models.URLField()
     class Meta:
@@ -513,7 +509,7 @@ class CREDITOS(models.Model):
     libranza = models.CharField(max_length=10,null = True)
     pagare = models.CharField(max_length=10,null = True)
     termino = models.CharField(max_length=1, choices=OPC_CRE_TERMINO)
-    por_pag = models.CharField(max_length=1, choices=OPC_CRE_FOR_PAG)
+    for_pag = models.CharField(max_length=1, choices=OPC_CRE_FOR_PAG)
     fec_des = models.DateField()
     fec_pag_ini = models.DateField()
     fec_ree = models.DateField()

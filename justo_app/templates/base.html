@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JustoWare</title>
+</head>
+
+<body>
+    <nav>
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+                <a href="/" class="nav-link">Inicio</a>
+            </li>
+
+            {% if user.is_authenticated %}
+            <li class="nav-item">
+                <a href="/Cerrar_Sesion" class="nav-link">Cerrar Sesion</a>
+            </li>
+            {% else %}
+            <li class="nav-item">
+                <a href="/Iniciar_Sesion" class="nav-link">Iniciar Sesion</a>
+            </li>
+            {% endif %}
+
+        </ul>
+    </nav>
+    {% block content %}
+    {% endblock %}
+</body>
+
+</html>

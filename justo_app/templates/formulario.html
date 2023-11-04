@@ -1,0 +1,13 @@
+<!-- <form method="post" action="{% url 'Num_Let' %}">
+    {% csrf_token %}
+    <label for="numero">Ingrese un número:</label>
+    <input type="text" name="numero">
+    <button type="submit">Convertir a letras</button>
+</form> -->
+
+<form method="post" action="{% url 'Calcula_DV' %}">
+    {% csrf_token %}
+    <label for="nit">Ingrese el nit:</label>
+    <input type="text" name="nit">
+    <button type="submit">calcular dv</button>
+</form>
