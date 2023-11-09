@@ -1,13 +1,13 @@
-from datetime import date
+from datetime import date,datetime
 import os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Justo_proy.settings')
 
 # Initialize django application
 import django
 django.setup()
-from datetime import datetime
 import requests
 import justo_app.models as justoAppModels
+import time
 
 url = "https://dev.api.anteia.co/auth"
 
@@ -28,47 +28,68 @@ headers = {
   'Accept': 'application/json, application/xml',
   'Authorization': 'Bearer '+token
 }
+
+from django.core.exceptions import ValidationError
+from django.db import models
+class DefaultToZeroMixin(models.Model):
+    def save(self, *args, **kwargs):
+        for field_name in self._meta.fields:
+            field = getattr(self, field_name)
+            if isinstance(field, models.IntegerField) and (field is None or field == ''):
+                setattr(self, field_name, 0)
+        super(DefaultToZeroMixin, self).save(*args, **kwargs)
+    class Meta:
+        abstract = True
+
+def asignar_fecha(fecha_str, formato='%Y-%m-%d'):
+    try:
+        fecha = datetime.strptime(fecha_str, formato)
+        fecha_validada = fecha.strftime(formato)
+        return fecha_validada
+    except ValueError:
+        return None
+
 def init():
     response = requests.request("GET", url, headers=headers, data=payload)
-    nom_arc = "c:/aaa/archivo"
+    nom_arc = "c:/aaa/archivo1"
     anteia1 = response.json()
     with open(nom_arc, 'w') as archivo:
         archivo.write(str(anteia1))
-
     Cliente = justoAppModels.CLIENTES.objects.filter(codigo='A').first()
     if Cliente == None:
-        Cliente=justoAppModels.CLIENTES.objects.create(codigo="A",doc_ide='123456',sigla="COORINOQUIA")     
-   
+        Cliente=justoAppModels.CLIENTES.objects.create(codigo = "A",
+            doc_ide = '123456',
+            sigla = 'COORINOQUIA',
+            nombre = 'COOPERATIVA ESPECIALIZADA DE AHORRO Y CREDITO DE LA ORINOQUIA',
+            celular = '3151234567',
+        )
+    Oficina = justoAppModels.OFICINAS.objects.filter(codigo='A0001').first()
+    if Oficina == None:
+        Oficina=justoAppModels.OFICINAS.objects.create(cliente = Cliente,codigo = "A0001",
+            contabiliza = 'S',
+            nombre_oficina = 'Oficina Principal',
+            responsable = 'Jose Guillermo Prieto',
+            celular = '3153212144',
+        )
     for idsocio in anteia1['flows']:
-        tipTra = anteia1['flows'][idsocio]['tipoTramite']       # Nv 
-        #  Terceros 
-        nombre = anteia1['flows'][idsocio]['user.fullName']     # Terceros Nombre
-        ciuExpDoc =  anteia1['flows'][idsocio]['user.document.expeditionCity2']  # no tiene codigo
-        print("ciuExpDoc",ciuExpDoc)
-        direccion = anteia1['flows'][idsocio]['user.manualAdress.concat']
-        #  Direcciones   
+        doc_ide = anteia1['flows'][idsocio]['user.document.number'] = anteia1['flows'][idsocio]['user.document.number']
+        if doc_ide != '40395800':
+            continue
+        # nombre = anteia1['flows'][idsocio]['user.fullName']     # Terceros Nombre
+        tipTra = anteia1['flows'][idsocio]['tipoTramite']
         dirTot = anteia1['flows'][idsocio]['user.manualAdress.numVia']
         dirTot = dirTot + ' '+anteia1['flows'][idsocio]['user.manualAdress.segundoNumero']
         dirTot = dirTot + ' '+anteia1['flows'][idsocio]['user.manualAdress.numViaDos']
         tipVia = anteia1['flows'][idsocio]['user.manualAdress.tipoVia']
         direccion = tipVia+' '+dirTot
-        telefono = anteia1['flows'][idsocio]['user.phone']
-        lacalizacion = anteia1['flows'][idsocio]['user.manualAdress.extra']
-        dirRur = anteia1['flows'][idsocio]['user.manualAdress.rural']
-
-        fec_Exp_Doc = anteia1['flows'][idsocio]['user.document.expeditionDate']
-        
-        email = anteia1['flows'][idsocio]['user.email']
-        cod_ciu = anteia1['flows'][idsocio]['user.city.cod']
         Cliente = justoAppModels.CLIENTES.objects.filter(codigo='A').first()
-        Localidad = justoAppModels.LOCALIDADES.objects.filter(cliente=Cliente,codigo='50001').first()
         Tercero = justoAppModels.TERCEROS.objects.filter(cliente=Cliente,
-            cla_doc = 'C',
+            cla_doc = anteia1['flows'][idsocio]['user.document.type.cod'][0],
             doc_ide = anteia1['flows'][idsocio]['user.document.number']).first()
         if Tercero == None:
             Tercero = justoAppModels.TERCEROS.objects.create(
                 cliente = Cliente,
-                cla_doc = 'C',  # cla_doc = anteia1['flows'][idsocio]['user.document.type.cod'],
+                cla_doc = anteia1['flows'][idsocio]['user.document.type.cod'][0],
                 doc_ide = anteia1['flows'][idsocio]['user.document.number']
             )
         Tercero.tip_ter = 'N'
@@ -76,164 +97,200 @@ def init():
         Tercero.seg_ape = anteia1['flows'][idsocio]['user.secondLastName']
         Tercero.pri_nom = anteia1['flows'][idsocio]['user.firstNameFirst']
         Tercero.seg_nom = anteia1['flows'][idsocio]['user.middleName']
-        Tercero.direccion = direccion
-        Tercero.nombre = nombre
+        Tercero.direccion = anteia1['flows'][idsocio]['user.manualAdress.concat']
+        Tercero.nombre = anteia1['flows'][idsocio]['user.fullName']
         Tercero.dig_ver = ' '
         Tercero.nit_rap = ''
-        Tercero.tel_res = telefono
-        Tercero.celular1 = telefono
+        Tercero.tel_res = anteia1['flows'][idsocio]['user.phone']
+        Tercero.celular1 =  anteia1['flows'][idsocio]['user.phone'] # Celular
+        Localidad = justoAppModels.LOCALIDADES.objects.filter(cliente=Cliente,
+            codigo=anteia1['flows'][idsocio]['user.document.expeditionCity.cod']).first()
         Tercero.cod_ciu_exp = Localidad
+        Localidad = justoAppModels.LOCALIDADES.objects.filter(cliente=Cliente,
+            codigo=anteia1['flows'][idsocio]['user.city.cod']).first()
         Tercero.cod_ciu_res = Localidad
-        Tercero.fec_exp_ced = datetime.strptime(fec_Exp_Doc, "%d-%b-%Y").strftime("%Y-%m-%d")
-        Tercero.email = email
+        print('Fecha ',anteia1['flows'][idsocio]['user.document.expeditionDate'])
+        Tercero.fec_exp_ced = datetime.strptime(anteia1['flows'][idsocio]['user.document.expeditionDate'], "%d-%b-%Y").strftime("%Y-%m-%d")
+        Tercero.email = anteia1['flows'][idsocio]['user.email']
         Tercero.fec_act = date.today()
-        Tercero.regimen = 49
+        Tercero.regimen = '49'
         Tercero.save()
-
-        #   Asociados    
-        cod_aso = anteia1['flows'][idsocio]['user.document.number'] # Ok
-        sexo = anteia1['flows'][idsocio]['user.document.sex']
-        est_civ = anteia1['flows'][idsocio]['user.civilState']
-        fec_nac = anteia1['flows'][idsocio]['user.document.birthDate']  # Ok
-        cod_ciu_nac = anteia1['flows'][idsocio]['user.document.birthPlaceUpper']
-        ciu_res = anteia1['flows'][idsocio]['user.workInfo.city.cod']
-        print("ciu_res",ciu_res)
-        zona = anteia1['flows'][idsocio]['user.zone']
-        estrato = anteia1['flows'][idsocio]['user.estrato']
-        niv_est = anteia1['flows'][idsocio]['user.studiesLevel.cod']
-        ocupacion = anteia1['flows'][idsocio]['user.ocupation']
-        print("ocupacion=",ocupacion)
-        break
-
-        ocupacion_cod = anteia1['flows'][idsocio]['user.ocupation.cod']
-        profesion = anteia1['flows'][idsocio]['user.tituloProfesional']
-        cab_fam = anteia1['flows'][idsocio]['user.houseHolder']  # asociados
-        fec_afi = anteia1['flows'][idsocio]['form.date']
-        cargo_emp = anteia1['flows'][idsocio]['user.workInfo.position']
-        per_a_cargo = anteia1['flows'][idsocio]['user.personsInCharge']
-        num_hij_men = anteia1['flows'][idsocio]['user.numsChildren.menores']
-        num_hij_may = anteia1['flows'][idsocio]['user.numsChildren.mayores']
-        tip_viv = anteia1['flows'][idsocio]['user.home.type.cod']
-        tie_en_ciu = anteia1['flows'][idsocio]['user.home.time']
-        med_con = anteia1['flows'][idsocio]['coorinoquia.medioContacto']
-        fec_ing_tra = anteia1['flows'][idsocio]['user.workInfo.startDate']
-        tel_tra = anteia1['flows'][idsocio]['user.workInfo.phone']
-        tip_sal = anteia1['flows'][idsocio]['user.workInfo.salaryType']
-        ciu_tra = anteia1['flows'][idsocio]['user.workInfo.city']
-        act_eco = anteia1['flows'][idsocio]['user.workInfo.economicActivity'] 
-        cod_ciiu = anteia1['flows'][idsocio]['user.workInfo.ciiu']
-        tip_con = anteia1['flows'][idsocio]['user.workInfo.contractType']
-        nom_emp = anteia1['flows'][idsocio]['user.workInfo.company']
-        nit_emp = anteia1['flows'][idsocio]['user.workInfo.nit']
-        dir_emp = anteia1['flows'][idsocio]['user.workInfo.address']
-        email_emp = anteia1['flows'][idsocio]['user.workInfo.email']
-        sector_emp = anteia1['flows'][idsocio]['user.workInfo.sector']
-        empresa_ant = anteia1['flows'][idsocio]['user.workInfo.tiempo']
-        emp_num_emp = anteia1['flows'][idsocio]['user.workInfo.hasEmployees.quantity']
+        #   Asociados 
+        Asociado = justoAppModels.ASOCIADOS.objects.filter(oficina=Oficina,
+            cod_aso = doc_ide).first()
+        if Asociado == None:
+            Asociado = justoAppModels.ASOCIADOS.objects.create(
+                oficina = Oficina,
+                cod_aso = doc_ide,
+            )
+        Asociado.tercero = Tercero
+        Asociado.sexo = anteia1['flows'][idsocio]['user.document.sex']
+        Asociado.est_civ = anteia1['flows'][idsocio]['user.civilState'][0]
+        Asociado.fec_nac = datetime.strptime(anteia1['flows'][idsocio]['user.document.birthDate'], "%d-%b-%Y").strftime("%Y-%m-%d")
+        Asociado.ciu_res = anteia1['flows'][idsocio]['user.workInfo.city.cod']
+        Asociado.zona = anteia1['flows'][idsocio]['user.zone']
+        Asociado.estrato = anteia1['flows'][idsocio]['user.estrato']
+        Asociado.niv_est = anteia1['flows'][idsocio]['user.studiesLevel.cod']
+        Asociado.ocupacion = anteia1['flows'][idsocio]['user.ocupation']
+        Asociado.ocupacion_cod = anteia1['flows'][idsocio]['user.ocupation.cod']
+        Asociado.profesion = anteia1['flows'][idsocio]['user.tituloProfesional']
+        Asociado.cab_fam = anteia1['flows'][idsocio]['user.houseHolder'][0]  # asociados
+        # datetime.strptime(anteia1['flows'][idsocio]['user.document.birthDate'], "%d-%b-%Y").strftime("%Y-%m-%d")
+        Asociado.fec_afi = asignar_fecha(anteia1['flows'][idsocio]['user.document.birthDate'])
+        # , "%d-%b-%Y").strftime("%Y-%m-%d")
+        Asociado.cargo_emp = anteia1['flows'][idsocio]['user.workInfo.position']
+        Asociado.per_a_cargo = anteia1['flows'][idsocio]['user.personsInCharge']
+        Asociado.num_hij_men = anteia1['flows'][idsocio]['user.numsChildren.menores']
+        Asociado.num_hij_may = anteia1['flows'][idsocio]['user.numsChildren.mayores']
+        Asociado.tip_viv = anteia1['flows'][idsocio]['user.home.type.cod']
+        Asociado.tie_en_ciu = anteia1['flows'][idsocio]['user.home.time']
+        Asociado.med_con = anteia1['flows'][idsocio]['coorinoquia.medioContacto']
+        #   Asociado.fec_ing_tra = datetime.strptime(anteia1['flows'][idsocio]['user.workInfo.startDate'],"%d-%b-%Y").strftime("%Y-%m-%d")
+        Asociado.tel_tra = anteia1['flows'][idsocio]['user.workInfo.phone']
+        Asociado.tip_sal = anteia1['flows'][idsocio]['user.workInfo.salaryType']
+        Asociado.ciu_tra = anteia1['flows'][idsocio]['user.workInfo.city']
+        Asociado.act_eco = anteia1['flows'][idsocio]['user.workInfo.economicActivity'] 
+        Asociado.cod_ciiu = anteia1['flows'][idsocio]['user.workInfo.ciiu'][:12]
+        Asociado.tip_con = anteia1['flows'][idsocio]['user.workInfo.contractType']
+        Asociado.nom_emp = anteia1['flows'][idsocio]['user.workInfo.company']
+        Asociado.nit_emp = anteia1['flows'][idsocio]['user.workInfo.nit']
+        Asociado.dir_emp = anteia1['flows'][idsocio]['user.workInfo.address']
+        Asociado.email_emp = anteia1['flows'][idsocio]['user.workInfo.email']
+        Asociado.sector_emp = anteia1['flows'][idsocio]['user.workInfo.sector']
+        Asociado.empresa_ant = anteia1['flows'][idsocio]['user.workInfo.tiempo']
+        Asociado.emp_num_emp = anteia1['flows'][idsocio]['user.workInfo.hasEmployees.quantity']
         #    negocio_lug = anteia1['flows'][idsocio]['user.workInfo.location']
         #    ocuEmp = anteia1['flows'][idsocio]['user.workInfo.occupation']
-        negocio_pro = anteia1['flows'][idsocio]['user.workInfo.hasBusiness']
-        negocio_nom = anteia1['flows'][idsocio]['user.business.name']
-        negocio_tel = anteia1['flows'][idsocio]['user.business.owner.phone']
-        negocio_loc_pro = anteia1['flows'][idsocio]['user.business.rental']
-        negocio_cam_com = anteia1['flows'][idsocio]['user.business.camaraComercio']
-        negocio_ant = anteia1['flows'][idsocio]['user.business.time']
-        pension_ent = anteia1['flows'][idsocio]['user.pensioner.entity']
-        pension_tie = anteia1['flows'][idsocio]['user.pensioner.startDate']
-        pension_otr = anteia1['flows'][idsocio]['user.pensioner.other']
-        pension_ent_otr = anteia1['flows'][idsocio]['user.pensioner.other.entity']
-        pep_es_fam = anteia1['flows'][idsocio]['user.pep.esFamiliar']
-        pep_fam_par = anteia1['flows'][idsocio]['user.pep.fam.parentesco']
-        pep_fam_nom = anteia1['flows'][idsocio]['user.pep.fam.nombre']
-        pep_car_pub = anteia1['flows'][idsocio]['user.ostentaCargoPublico']
-        pep_cargo = anteia1['flows'][idsocio]['user.pep.cargo']
-        pep_eje_pod = anteia1['flows'][idsocio]['user.ejercePoder']
-        pep_adm_rec_est = anteia1['flows'][idsocio]['user.administraRecursos']
-        
-        tie_gre_car = anteia1['flows'][idsocio]['coorinoquia.fatca2']
-        recibe_pag_ext = anteia1['flows'][idsocio]['coorinoquia.fatca3']
-        recide_ext_mas_186 = anteia1['flows'][idsocio]['coorinoquia.fatca1']
-        recibe_ing_ext = anteia1['flows'][idsocio]['coorinoquia.fatca4']
-
+        Asociado.negocio_pro = anteia1['flows'][idsocio]['user.workInfo.hasBusiness']
+        Asociado.negocio_nom = anteia1['flows'][idsocio]['user.business.name']
+        Asociado.negocio_tel = anteia1['flows'][idsocio]['user.business.owner.phone']
+        Asociado.negocio_loc_pro = anteia1['flows'][idsocio]['user.business.rental']
+        Asociado.negocio_cam_com = anteia1['flows'][idsocio]['user.business.camaraComercio']
+        Asociado.negocio_ant = anteia1['flows'][idsocio]['user.business.time']
+        Asociado.pension_ent = anteia1['flows'][idsocio]['user.pensioner.entity']
+        Asociado.pension_tie = anteia1['flows'][idsocio]['user.pensioner.startDate']
+        Asociado.pension_otr = anteia1['flows'][idsocio]['user.pensioner.other']
+        Asociado.pension_ent_otr = anteia1['flows'][idsocio]['user.pensioner.other.entity']
+        Asociado.pep_es_fam = anteia1['flows'][idsocio]['user.pep.esFamiliar'][0]
+        Asociado.pep_fam_par = anteia1['flows'][idsocio]['user.pep.fam.parentesco']
+        Asociado.pep_fam_nom = anteia1['flows'][idsocio]['user.pep.fam.nombre']
+        Asociado.pep_car_pub = anteia1['flows'][idsocio]['user.ostentaCargoPublico'][0]
+        Asociado.pep_cargo = anteia1['flows'][idsocio]['user.pep.cargo']
+        Asociado.pep_eje_pod = anteia1['flows'][idsocio]['user.ejercePoder']
+        Asociado.pep_adm_rec_est = anteia1['flows'][idsocio]['user.administraRecursos']
+        Asociado.tie_gre_car = anteia1['flows'][idsocio]['coorinoquia.fatca2'][0]
+        Asociado.recibe_pag_ext = anteia1['flows'][idsocio]['coorinoquia.fatca3'][0]
+        Asociado.recide_ext_mas_186 = anteia1['flows'][idsocio]['coorinoquia.fatca1'][0]
+        Asociado.recibe_ing_ext = anteia1['flows'][idsocio]['coorinoquia.fatca4'][0]
+        Asociado.save()
         # Estados Financieros
-        ing_sal_fij = anteia1['flows'][idsocio]['user.financial.salary']
-        ing_hon = anteia1['flows'][idsocio]['user.financial.honoraries']
-        ing_pen = anteia1['flows'][idsocio]['user.financial.pension']
-        ing_arr = anteia1['flows'][idsocio]['user.financial.otherIncome.act']  # no esta
-        ing_com = anteia1['flows'][idsocio]['user.financial.pension']  # no esta
-        ing_ext = anteia1['flows'][idsocio]['user.financial.extra']
-        ing_otr = anteia1['flows'][idsocio]['user.financial.agregarOtros']
-        ing_tot = anteia1['flows'][idsocio]['user.financial.totalIncomes']
-
-        egr_sec_fin = anteia1['flows'][idsocio]['user.financial.familyExpenses']
-        egr_cuo_hip = anteia1['flows'][idsocio]['user.financial.otherIncome']
-        egr_des_nom = anteia1['flows'][idsocio]['user.financial.hasOtherExpenses']
-        egr_gas_fam = anteia1['flows'][idsocio]['user.financial.personalExpenses']
-        egr_otr_cre = anteia1['flows'][idsocio]['user.financial.creditCards']
-        egr_arr = anteia1['flows'][idsocio]['user.financial.leasing']
-        egr_otr_gas = anteia1['flows'][idsocio]['user.financial.otherExpenses']
-        egr_tot = anteia1['flows'][idsocio]['user.financial.totalExpenses']
-
-        act_otr_egr = anteia1['flows'][idsocio]['user.financial.otherExpenses.act']
-        act_tip_bien = anteia1['flows'][idsocio]['coorinoquia.activos.tipo2']
-        act_vei = anteia1['flows'][idsocio]['coorinoquia.activos.valorComercial2']
-        act_otr = anteia1['flows'][idsocio]['coorinoquia.agregarActivo']
-        tot_act = anteia1['flows'][idsocio]['user.financial.totalAssets']
-        act_fin_rai =anteia1['flows'][idsocio]['coorinoquia.activos.valorComercial']
-        act_inv = anteia1['flows'][idsocio]['coorinoquia.inversiones']
-        escritura = anteia1['flows'][idsocio]['coorinoquia.activos.tipo']
-        pas_otr = anteia1['flows'][idsocio]['coorinoquia.agregarPasivo']
-        pas_tip = anteia1['flows'][idsocio]['coorinoquia.pasivos.tipo']
-        tot_pat = anteia1['flows'][idsocio]['user.financial.totalEquity']
-        pas_val = anteia1['flows'][idsocio]['coorinoquia.pasivos.valorComercial2']
-        tot_pas = anteia1['flows'][idsocio]['coorinoquia.totalLiability']
-
-        pas_des = anteia1['flows'][idsocio]['coorinoquia.pasivos.descripcion2']
-        dec_ren = anteia1['flows'][idsocio]['coorinoquia.declaraciones.renta']
-        tip_pas = anteia1['flows'][idsocio]['coorinoquia.pasivos.tipo2']
-        des_pas = anteia1['flows'][idsocio]['coorinoquia.pasivos.descripcion']
-        val_pas = anteia1['flows'][idsocio]['coorinoquia.pasivos.valorComercial']
-        ope_mon_ext = anteia1['flows'][idsocio]['coorinoquia.declaraciones.realizaOperaciones']
-        nom_ban_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.nombreEntidad']
-        ope_monto_ext = anteia1['flows'][idsocio]['coorinoquia.operExtranjeras.monto']
-        ope_pais_ext = anteia1['flows'][idsocio]['coorinoquia.operExtranjeras.pais']
-        num_cta_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.numCuenta']
-        tip_ope_ext = anteia1['flows'][idsocio]['coorinoquia.operExtranjeras.tipoOperacion']
-        mon_ope_ext = anteia1['flows'][idsocio]['coorinoquia.operExtranjeras.moneda']
-        prod_mon_ext = anteia1['flows'][idsocio]['coorinoquia.declaraciones.productosExtranjeros']
-        des_prod_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.descripcion']
-        mon_prod_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.moneda']
-        pais_prod_ext =anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.pais']
-        ciu_prod_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.ciudad']
-        prom_prod_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.monto']
-
-        #   Solicitud de creditos    
-        lin_cre = anteia1['flows'][idsocio]['coorinoquia.solicitudCredito.linea']				
-        monto = anteia1['flows'][idsocio]['coorinoquia.solicitudCredito.monto']				
-        plazo = anteia1['flows'][idsocio]['coorinoquia.solicitudCredito.plazo']				
-        garCreSol = anteia1['flows'][idsocio]['coorinoquia.solicitudCredito.garantia.cod']
-        linCreSol = anteia1['flows'][idsocio]['coorinoquia.solicitudCredito.linea.cod']
-        modCreSol = anteia1['flows'][idsocio]['coorinoquia.solicitudCredito.modalidad.cod']
-
-        
-        #  print(idsocio,nombre,"\n"," Referencias Personales")
-        for refPer in anteia1['arrayData'][idsocio]['coorinoquia.referenciasPersonales']['data']:
-            refPerdir = refPer['data']['direccion']
-            refPerNom = refPer['data']['nombreCompleto']
-            refPerTel = refPer['data']['telefono']
-
-        for reffam in anteia1['arrayData'][idsocio]['coorinoquia.referenciasFamiliares']['data']:
-            refFamPar = reffam['data']['parentesco']
-            refFamDir = reffam['data']['direccion']
-            refFamCel = reffam['data']['celular']
-            refFamOcu = reffam['data']['ocupacion']
-            refFamNomCom = reffam['data']['nombreCompleto']
+        Estados_Fin = justoAppModels.estados_fin.objects.filter(cliente=Cliente,tercero=Tercero).first()
+        if Estados_Fin == None:
+            Estados_Fin = justoAppModels.estados_fin.objects.create(
+                cliente = Cliente,
+                tercero = Tercero,
+            )
+        Estados_Fin.ing_sal_fij = anteia1['flows'][idsocio]['user.financial.salary']
+        Estados_Fin.ing_hon = anteia1['flows'][idsocio]['user.financial.honoraries']
+        Estados_Fin.ing_pen = anteia1['flows'][idsocio]['user.financial.pension']
+        Estados_Fin.ing_arr = anteia1['flows'][idsocio]['user.financial.otherIncome.act']  # no esta
+        Estados_Fin.ing_com = anteia1['flows'][idsocio]['user.financial.pension']  # no esta
+        Estados_Fin.ing_ext = anteia1['flows'][idsocio]['user.financial.extra']
+        Estados_Fin.ing_otr = anteia1['flows'][idsocio]['user.financial.agregarOtros'][0]
+        Estados_Fin.ing_tot = anteia1['flows'][idsocio]['user.financial.totalIncomes']
+        Estados_Fin.egr_sec_fin = anteia1['flows'][idsocio]['user.financial.familyExpenses']
+        Estados_Fin.egr_cuo_hip = anteia1['flows'][idsocio]['user.financial.otherIncome']
+        Estados_Fin.egr_des_nom = anteia1['flows'][idsocio]['user.financial.hasOtherExpenses'][0]
+        Estados_Fin.egr_gas_fam = anteia1['flows'][idsocio]['user.financial.personalExpenses']
+        Estados_Fin.egr_otr_cre = anteia1['flows'][idsocio]['user.financial.creditCards']
+        Estados_Fin.egr_arr = anteia1['flows'][idsocio]['user.financial.leasing']
+        Estados_Fin.egr_otr_gas = anteia1['flows'][idsocio]['user.financial.otherExpenses']
+        Estados_Fin.egr_tot = anteia1['flows'][idsocio]['user.financial.totalExpenses']
+        Estados_Fin.act_otr_egr = anteia1['flows'][idsocio]['user.financial.otherExpenses.act']
+        Estados_Fin.act_tip_bien = anteia1['flows'][idsocio]['coorinoquia.activos.tipo2']
+        Estados_Fin.act_vei = anteia1['flows'][idsocio]['coorinoquia.activos.valorComercial2']
+        Estados_Fin.act_otr = anteia1['flows'][idsocio]['coorinoquia.agregarActivo'][0]
+        Estados_Fin.tot_act = anteia1['flows'][idsocio]['user.financial.totalAssets']
+        Estados_Fin.act_fin_rai =anteia1['flows'][idsocio]['coorinoquia.activos.valorComercial']
+        Estados_Fin.act_inv = anteia1['flows'][idsocio]['coorinoquia.inversiones']
+        Estados_Fin.escritura = anteia1['flows'][idsocio]['coorinoquia.activos.tipo']
+        Estados_Fin.pas_otr = anteia1['flows'][idsocio]['coorinoquia.agregarPasivo'][0]
+        Estados_Fin.pas_tip = anteia1['flows'][idsocio]['coorinoquia.pasivos.tipo']
+        Estados_Fin.tot_pat = anteia1['flows'][idsocio]['user.financial.totalEquity']
+        Estados_Fin.pas_val = anteia1['flows'][idsocio]['coorinoquia.pasivos.valorComercial2']
+        Estados_Fin.tot_pas = anteia1['flows'][idsocio]['coorinoquia.totalLiability']
+        Estados_Fin.pas_des = anteia1['flows'][idsocio]['coorinoquia.pasivos.descripcion2']
+        Estados_Fin.dec_ren = anteia1['flows'][idsocio]['coorinoquia.declaraciones.renta'][0]
+        Estados_Fin.tip_pas = anteia1['flows'][idsocio]['coorinoquia.pasivos.tipo2']
+        Estados_Fin.des_pas = anteia1['flows'][idsocio]['coorinoquia.pasivos.descripcion']
+        Estados_Fin.val_pas = anteia1['flows'][idsocio]['coorinoquia.pasivos.valorComercial']
+        Estados_Fin.ope_mon_ext = anteia1['flows'][idsocio]['coorinoquia.declaraciones.realizaOperaciones'][0]
+        Estados_Fin.nom_ban_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.nombreEntidad']
+        Estados_Fin.ope_monto_ext = anteia1['flows'][idsocio]['coorinoquia.operExtranjeras.monto']
+        Estados_Fin.ope_pais_ext = anteia1['flows'][idsocio]['coorinoquia.operExtranjeras.pais']
+        Estados_Fin.num_cta_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.numCuenta']
+        Estados_Fin.tip_ope_ext = anteia1['flows'][idsocio]['coorinoquia.operExtranjeras.tipoOperacion']
+        Estados_Fin.mon_ope_ext = anteia1['flows'][idsocio]['coorinoquia.operExtranjeras.moneda']
+        Estados_Fin.prod_mon_ext = anteia1['flows'][idsocio]['coorinoquia.declaraciones.productosExtranjeros'][0]
+        Estados_Fin.des_prod_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.descripcion']
+        Estados_Fin.mon_prod_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.moneda']
+        Estados_Fin.pais_prod_ext =anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.pais']
+        Estados_Fin.ciu_prod_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.ciudad']
+        Estados_Fin.prom_prod_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.monto']
+        Estados_Fin.save()
+        if tipTra == 'Afiliación y solicitud de crédito':
+            fec_hoy = datetime.strptime("2023-11-6", "%Y-%m-%d")
+            Originacion = justoAppModels.ORIGINACION.objects.filter(asociado=Asociado).first()
+            if Originacion == None:
+                Originacion = justoAppModels.ORIGINACION.objects.create(
+                    asociado = Asociado,
+                )     
+            Originacion.lin_cre = anteia1['flows'][idsocio]['coorinoquia.solicitudCredito.linea']				
+            Originacion.monto = anteia1['flows'][idsocio]['coorinoquia.solicitudCredito.monto']				
+            Originacion.plazo = anteia1['flows'][idsocio]['coorinoquia.solicitudCredito.plazo']				
+            Originacion.gar_cre_sol = anteia1['flows'][idsocio]['coorinoquia.solicitudCredito.garantia.cod']
+            Originacion.lin_cre_sol = anteia1['flows'][idsocio]['coorinoquia.solicitudCredito.linea.cod']
+            Originacion.mod_cre_sol = anteia1['flows'][idsocio]['coorinoquia.solicitudCredito.modalidad.cod']
+            Originacion.save()
 
         for beneficiario in anteia1['arrayData'][idsocio]['coorinoquia.beneficiarios']['data']:
-            benTipDoc = beneficiario['data']['docType']
-            benParentesco = beneficiario['data']['parentesco']
             benNumDoc = beneficiario['data']['numDoc']
-            benorcentaje = beneficiario['data']['porcentaje']
-            benNomCom = beneficiario['data']['nombreCompleto']
-
+            Aso_benef = justoAppModels.ASO_BENEF.objects.filter(asociado = Asociado,doc_ide = benNumDoc).first()
+            if Aso_benef == None:
+                Aso_benef = justoAppModels.ASO_BENEF.objects.create(
+                    asociado = Asociado,
+                    doc_ide = benNumDoc,
+            )
+            Aso_benef.cla_doc = beneficiario['data']['docType'][0]
+            Aso_benef.parentesco = '1'
+            # Aso_benef.parentesco = Aso_benef['data']['parentesco'][0]
+            Aso_benef.porcentaje = beneficiario['data']['porcentaje']
+            Aso_benef.nombre = beneficiario['data']['nombreCompleto']
+            Aso_benef.save()
+        
+        for reffam in anteia1['arrayData'][idsocio]['coorinoquia.referenciasFamiliares']['data']:
+            refFamNomCom = reffam['data']['nombreCompleto']
+            Aso_ref_fam = justoAppModels.ASO_REF_FAM.objects.filter(asociado = Asociado,nombre = refFamNomCom).first()
+            if Aso_ref_fam == None:
+                Aso_ref_fam = justoAppModels.ASO_REF_FAM.objects.create(
+                    asociado = Asociado,
+                    nombre = refFamNomCom,
+            )
+            Aso_ref_fam.parentesco = reffam['data']['parentesco']
+            Aso_ref_fam.telefono = reffam['data']['celular']
+            Aso_ref_fam.ocupacion = reffam['data']['ocupacion']    
+            Aso_ref_fam.direccion = reffam['data']['direccion']
+                
+        for refPer in anteia1['arrayData'][idsocio]['coorinoquia.referenciasPersonales']['data']:
+            refPerNom = refPer['data']['nombreCompleto']
+            Aso_ref_per = justoAppModels.ASO_REF_PER.objects.filter(asociado = Asociado,nombre = refPerNom).first()
+            if Aso_ref_per == None:
+                Aso_ref_per = justoAppModels.ASO_REF_PER.objects.create(
+                    asociado = Asociado,
+                    nombre = refPerNom,
+            )
+            Aso_ref_per.direccion = refPer['data']['direccion']    
+            Aso_ref_per.ocupacion = ''
+            Aso_ref_per.celular = refPer['data']['telefono']
+            Aso_ref_per.save()
 init()

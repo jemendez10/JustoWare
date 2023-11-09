@@ -2,8 +2,20 @@ from django.db import models
 import re
 from django.core.exceptions import ValidationError
 
-# Create your models here.
-# from django.db import models
+from django.core.exceptions import ValidationError
+from django.db import models
+
+class DefaultToZeroMixin(models.Model):
+    def save(self, *args, **kwargs):
+        for field in self._meta.fields:
+            if (isinstance(field, models.IntegerField) or isinstance(field, models.FloatField)) and field.attname != 'id' :
+                if getattr(self, field.name) is None or getattr(self, field.name) == '':
+                    setattr(self, field.name, 0)
+
+        super(DefaultToZeroMixin, self).save(*args, **kwargs)
+
+    class Meta:
+        abstract = True
 
 def validate_numeric(value):
     if not re.match(r'^[0-9]+$', value):
@@ -170,7 +182,7 @@ OPC_EST_CRE = (
 
 OPC_MODALIDAD_CRE = (
     ('A','Admisible'),
-    ('C','Vomercial'),
+    ('C','Comercial'),
     ('M','MicroCredito'),
     ('V','Vivienda')
 )
@@ -225,7 +237,6 @@ class OFICINAS(models.Model):
         unique_together = [['cliente','codigo']]
         db_table = 'oficinas'
 
-
 class LOCALIDADES(models.Model):
     # id = models.AutoField(primary_key=True)
     cliente = models.ForeignKey(CLIENTES, on_delete=models.CASCADE)
@@ -268,7 +279,7 @@ class TERCEROS(models.Model):
     fax = models.CharField(max_length=10,null = True)     
     email = models.EmailField()
     nombre = models.CharField(max_length=68,blank=True, null=True)   
-    fec_act = models.DateField()
+    fec_act = models.DateField(null=True,blank=True)
     observacion = models.CharField(max_length=68,null = True)  
     per_pub_exp = models.CharField(max_length=1, choices=OPC_BOOL)
     nit_interno = models.CharField(max_length=1, choices=OPC_BOOL)
@@ -282,43 +293,45 @@ class TERCEROS(models.Model):
         unique_together = [['cliente','cla_doc','doc_ide']]
         db_table = 'terceros'
 
-class estados_fin(models.Model):
+class estados_fin(DefaultToZeroMixin):
     id = models.AutoField(primary_key=True)
-    tercero = models.OneToOneField(TERCEROS, on_delete=models.CASCADE, null=True)
-    fec_inf = models.DateField()
-    ing_sal_fij = models.FloatField()
-    ing_hon = models.FloatField()
-    ing_pen = models.FloatField()
-    ing_arr = models.FloatField()
-    ing_com = models.FloatField()
-    ing_ext = models.FloatField()
-    ing_tot = models.FloatField()
-    egr_sec_fin = models.FloatField()
-    egr_cuo_hip = models.FloatField()
-    egr_des_nom = models.FloatField()
-    egr_gas_fam = models.FloatField()
-    egr_otr_cre = models.FloatField()
-    egr_arr = models.FloatField()
-    egr_otr_gas = models.FloatField()
-    egr_tot = models.FloatField()
-    act_otr_egr = models.FloatField()
-    act_tip_bien = models.FloatField()
-    act_vei = models.FloatField()
-    act_otr = models.FloatField()
-    tot_act = models.FloatField()
-    act_fin_rai = models.FloatField()
-    act_inv = models.FloatField()
-    escritura = models.FloatField()
-    pas_otr = models.FloatField()
-    pas_tip = models.FloatField()
-    tot_pat = models.FloatField()
-    pas_val = models.FloatField()
-    tot_pas = models.FloatField()
+    cliente = models.ForeignKey(CLIENTES, on_delete=models.CASCADE, null=False)
+    tercero = models.OneToOneField(TERCEROS, on_delete=models.CASCADE, null=False)
+    fec_inf = models.DateField(null=True,blank=True)
+    ing_sal_fij = models.FloatField(blank=True, null=True)
+    ing_hon = models.FloatField(blank=True, null=True)
+    ing_pen = models.FloatField(blank=True, null=True)
+    ing_arr = models.FloatField(blank=True, null=True)
+    ing_com = models.FloatField(blank=True, null=True)
+    ing_ext = models.FloatField(blank=True, null=True)
+    ing_otr = models.CharField(max_length=1, choices=OPC_BOOL,null=True)
+    ing_tot = models.FloatField(blank=True, null=True)
+    egr_sec_fin = models.FloatField(blank=True, null=True)
+    egr_cuo_hip = models.FloatField(blank=True, null=True)
+    egr_des_nom = models.CharField(max_length=1, choices=OPC_BOOL,null=True)
+    egr_gas_fam = models.FloatField(blank=True, null=True)
+    egr_otr_cre = models.FloatField(blank=True, null=True)
+    egr_arr = models.FloatField(blank=True, null=True)
+    egr_otr_gas = models.FloatField(blank=True, null=True)
+    egr_tot = models.FloatField(blank=True, null=True)
+    act_otr_egr = models.FloatField(blank=True, null=True)
+    act_tip_bien = models.CharField(max_length=20,null = True)  
+    act_vei = models.FloatField(blank=True, null=True)
+    act_otr = models.CharField(max_length=1, choices=OPC_BOOL,null=True)
+    tot_act = models.FloatField(blank=True, null=True)
+    act_fin_rai = models.FloatField(blank=True, null=True)
+    act_inv = models.FloatField(blank=True, null=True)
+    escritura = models.CharField(max_length=20,null = True)
+    pas_otr = models.CharField(max_length=1, choices=OPC_BOOL,null=True)
+    pas_tip = models.CharField(max_length=24,null = True)
+    tot_pat = models.FloatField(blank=True, null=True)
+    pas_val = models.FloatField(blank=True, null=True)
+    tot_pas = models.FloatField(blank=True, null=True)
     pas_des = models.CharField(max_length=40,null = True)
     dec_ren = models.CharField(max_length=1, choices=OPC_BOOL)
     tip_pas = models.CharField(max_length=40,null = True)
     des_pas = models.CharField(max_length=40,null = True)
-    val_pas = models.FloatField()
+    val_pas = models.FloatField(blank=True, null=True)
     ope_mon_ext = models.CharField(max_length=1, choices=OPC_BOOL)
     nom_ban_ext = models.CharField(max_length=40,null = True)
     ope_pais_ext = models.CharField(max_length=1, choices=OPC_BOOL)
@@ -331,115 +344,135 @@ class estados_fin(models.Model):
     mon_prod_ext = models.CharField(max_length=20,null = True)
     pais_prod_ext = models.CharField(max_length=20,null = True)
     ciu_prod_ext = models.CharField(max_length=20,null = True)
-    prom_prod_ext = models.FloatField()
-
+    prom_prod_ext = models.FloatField(blank=True, null=True)
+    class Meta:
+        unique_together = [['cliente','tercero']]
+        db_table = 'estados_fin'
 
 class pagadores(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=40,null = False)
 
-
-class ASOCIADOS(models.Model):
+class ASOCIADOS(DefaultToZeroMixin):
     id = models.AutoField(primary_key=True)
     cod_aso = models.CharField(max_length=12,null = False) 
     oficina = models.OneToOneField(OFICINAS, on_delete=models.CASCADE, null=True)
     tercero = models.OneToOneField(TERCEROS, on_delete=models.CASCADE, null=True)
-    cod_aso = models.CharField(max_length=12,null = False)
-    sexo = models.CharField(max_length=1,null = False)
+    sexo = models.CharField(max_length=1,null = True,blank = True)
     est_civ = models.CharField(max_length=1, choices=OPC_EST_CIV)
-    fec_nac = models.DateField()
-    ciu_res = models.CharField(max_length=48,null = False)
-    zona  = models.CharField(max_length=16,null = False)
-    profesion = models.CharField(max_length=48,null = False)
-    ocupacion = models.CharField(max_length=40,null = False)
-    ocupacion_cod = models.CharField(max_length=3,null = False)
-    estrato = models.CharField(max_length=1,null = False)
+    fec_nac = models.DateField(null = True,blank = True)
+    ciu_res = models.CharField(max_length=48,null = True,blank = True)
+    zona  = models.CharField(max_length=16,null = True,blank = True)
+    profesion = models.CharField(max_length=48,null = True,blank = True)
+    ocupacion = models.CharField(max_length=40,null = True,blank = True)
+    ocupacion_cod = models.CharField(max_length=3,null = True,blank = True)
+    estrato = models.CharField(max_length=1,null = True,blank = True)
     niv_est  = models.CharField(max_length=1, choices=OPC_EDUCACION)
     cab_fam = models.CharField(max_length=1, choices=OPC_BOOL)
-    id_pag = models.ForeignKey(pagadores, on_delete=models.CASCADE)
-    fec_afi = models.DateField()
-    cargo_emp = models.CharField(max_length=36,null = False)
-    per_a_cargo = models.IntegerField()
-    num_hij_men = models.IntegerField()
-    num_hij_may = models.IntegerField()
-    tip_viv = models.CharField(max_length=24,null = False)  
-    tie_en_ciu = models.IntegerField()
-    med_con = models.CharField(max_length=48,null = False)  
-    fec_ing_tra = models.DateField()
-    tel_tra = models.CharField(max_length=10,null = False)  
-    tip_sal= models.CharField(max_length=18,null = False)  
-    ciu_tra = models.CharField(max_length=30,null = False)  
+    id_pag = models.ForeignKey(pagadores, on_delete=models.CASCADE, null=True)
+    fec_afi = models.DateField(null = True,blank = True)
+    cargo_emp = models.CharField(max_length=36,null = True)
+    per_a_cargo = models.IntegerField(null = True,blank = True)
+    num_hij_men = models.IntegerField(blank=True, null=True)
+    num_hij_may = models.IntegerField(blank=True, null=True)
+    tip_viv = models.CharField(max_length=24,null = True)  
+    tie_en_ciu = models.IntegerField(blank=True, null=True)
+    med_con = models.CharField(max_length=48,null = True)  
+    fec_ing_tra = models.DateField(null=True,blank=True)
+    tel_tra = models.CharField(max_length=10,null = True)  
+    tip_sal= models.CharField(max_length=18,null = True)  
+    ciu_tra = models.CharField(max_length=30,null = True)  
     act_eco = models.CharField(max_length=24,null = True)  
-    cod_ciiu = models.CharField(max_length=12,null = False) 
-    tip_con = models.CharField(max_length=18,null = False)  
-    nom_emp = models.CharField(max_length=40,null = False)  
-    nit_emp = models.CharField(max_length=12,null = False)  
-    dir_emp = models.CharField(max_length=50,null = False)  
-    email_emp = models.EmailField()
-    sector_emp = models.CharField(max_length=12,null = False)  
-    empresa_ant = models.IntegerField()  
-    emp_num_emp = models.IntegerField()
+    cod_ciiu = models.CharField(max_length=12,null = True) 
+    tip_con = models.CharField(max_length=18,null = True)  
+    nom_emp = models.CharField(max_length=40,null = True)  
+    nit_emp = models.CharField(max_length=12,null = True)  
+    dir_emp = models.CharField(max_length=50,null = True)  
+    email_emp = models.EmailField(blank=True, null=True)
+    sector_emp = models.CharField(max_length=12,null = True)  
+    empresa_ant = models.IntegerField(blank=True, null=True)  
+    emp_num_emp = models.IntegerField(blank=True, null=True)
     negocio_pro = models.CharField(max_length=1, choices=OPC_BOOL)
-    negocio_nom = models.CharField(max_length=48,null = False)  
-    negocio_tel = models.CharField(max_length=10,null = False)  
+    negocio_nom = models.CharField(max_length=48,null = True)  
+    negocio_tel = models.CharField(max_length=10,null = True)  
     negocio_loc_pro = models.CharField(max_length=1, choices=OPC_BOOL)
     negocio_cam_com = models.CharField(max_length=1, choices=OPC_BOOL)
-    negocio_ant = models.IntegerField()
-    pension_ent = models.CharField(max_length=36,null = False)  
-    pension_tie = models.IntegerField()
+    negocio_ant = models.IntegerField(blank=True, null=True)
+    pension_ent = models.CharField(max_length=36,null = True)  
+    pension_tie = models.IntegerField(blank=True, null=True)
     pension_otr = models.CharField(max_length=1, choices=OPC_BOOL)
-    pension_ent_otr = models.CharField(max_length=36,null = False)  
+    pension_ent_otr = models.CharField(max_length=36,null = True)  
     pep_es_fam = models.CharField(max_length=1, choices=OPC_BOOL)
     pep_fam_par = models.CharField(max_length=1, choices=OPC_PARENTESCO)  
-    pep_fam_nom = models.CharField(max_length=36,null = False)  
+    pep_fam_nom = models.CharField(max_length=36,null = True)  
     pep_car_pub = models.CharField(max_length=1, choices=OPC_BOOL)
-    pep_cargo = models.CharField(max_length=36,null = False)  
+    pep_cargo = models.CharField(max_length=36,null = True)  
     pep_eje_pod = models.CharField(max_length=1, choices=OPC_BOOL)
     pep_adm_rec_est = models.CharField(max_length=1, choices=OPC_BOOL)
     tie_gre_car = models.CharField(max_length=1, choices=OPC_BOOL)
     recibe_pag_ext = models.CharField(max_length=1, choices=OPC_BOOL)
     recide_ext_mas_186 = models.CharField(max_length=1, choices=OPC_BOOL)
     recibe_ing_ext = models.CharField(max_length=1, choices=OPC_BOOL)
-
-
     class Meta:
         unique_together = [['oficina','cod_aso']]
         db_table = 'asociados'
 
 class ASO_BENEF(models.Model):
     id = models.AutoField(primary_key=True)
-    socio = models.ForeignKey(ASOCIADOS, on_delete=models.CASCADE)
+    asociado = models.ForeignKey(ASOCIADOS, on_delete=models.CASCADE)
     cla_doc = models.CharField(max_length=1, choices=OPC_CLASEDOC)
     doc_ide  = models.CharField(max_length=12,null = False)
     nombre = models.CharField(max_length=64,null = False)
     parentesco = models.CharField(max_length=1, choices=OPC_PARENTESCO) 
-    porcentaje = models.FloatField()
+    porcentaje = models.FloatField(blank=True, null=True)
+    class Meta:
+        unique_together = [['asociado','doc_ide']]
+        db_table = 'aso_banef'
 
 class ASO_REF_FAM(models.Model):
     id = models.AutoField(primary_key=True)
-    socio = models.ForeignKey(ASOCIADOS, on_delete=models.CASCADE)
+    asociado = models.ForeignKey(ASOCIADOS, on_delete=models.CASCADE)
     nombre = models.CharField(max_length=64,null = False)
+    ocupacion = models.CharField(max_length=30,null = True)
+    direccion = models.CharField(max_length=50,null = True)
     parentesco = models.CharField(max_length=1, choices=OPC_PARENTESCO) 
     telefono = models.CharField(max_length=10,null = False)
+    class Meta:
+        unique_together = [['asociado','nombre']]
+        db_table = 'aso_ref_fam'
 
 class ASO_REF_PER(models.Model):
     id = models.AutoField(primary_key=True)
-    socio = models.ForeignKey(ASOCIADOS, on_delete=models.CASCADE)
+    asociado = models.ForeignKey(ASOCIADOS, on_delete=models.CASCADE)
     nombre = models.CharField(max_length=64,null = False)
     ocupacion = models.CharField(max_length=32,null = False)
     direccion = models.CharField(max_length=64,null = False)
     celular = models.CharField(max_length=10,null = False)
     telefono = models.CharField(max_length=10,null = False)
+    class Meta:
+        unique_together = [['asociado','nombre']]
+        db_table = 'aso_ref_per'
 
+class ORIGINACION(models.Model):
+    asociado = models.ForeignKey(ASOCIADOS, on_delete=models.CASCADE)
+    lin_cre = models.CharField(max_length=30,null = False)
+    monto = models.FloatField(blank=True, null=True)
+    plazo = models.IntegerField(blank=True, null=True)
+    gar_cre_sol = models.CharField(max_length=1,null = False)
+    lin_cre_sol = models.CharField(max_length=1,null = False)
+    mod_cre_sol = models.CharField(max_length=1,null = False)
+    class Meta:
+        unique_together = [['asociado']]
+        db_table = 'originacion'
 
 class DOCTO_CONTA(models.Model):
     id = models.AutoField(primary_key=True)
     oficina = models.ForeignKey(OFICINAS, on_delete=models.CASCADE)
-    per_con = models.IntegerField()
+    per_con = models.IntegerField(blank=True, null=True)
     nom_cto = models.CharField(max_length=8,null = False)
     nombre = models.CharField(max_length=24,null = False)
     inicio_nuevo_per = models.CharField(max_length=1, choices=OPC_BOOL)
-    consecutivo = models.IntegerField()
+    consecutivo = models.IntegerField(blank=True, null=True)
     class Meta:
         unique_together = [['oficina','per_con','nom_cto']]
         db_table = 'docto_conta'
@@ -447,8 +480,8 @@ class DOCTO_CONTA(models.Model):
 class HECHO_ECONO(models.Model):
     id = models.BigAutoField(primary_key=True)
     docto_conta = models.ForeignKey(DOCTO_CONTA, on_delete=models.CASCADE)
-    numero = models.IntegerField()
-    fecha = models.DateField()
+    numero = models.IntegerField(blank=True, null=True)
+    fecha = models.DateField(null=True,blank=True)
     descripcion = models.CharField(max_length=64,null = True)
     anulado = models.CharField(max_length=1, choices=OPC_BOOL)
     protegido = models.CharField(max_length=1, choices=OPC_BOOL)
@@ -462,7 +495,7 @@ class HECHO_ECONO(models.Model):
 class PLAN_CTAS(models.Model):
     id = models.AutoField(primary_key=True)
     cliente = models.ForeignKey(CLIENTES, on_delete=models.CASCADE)
-    per_con = models.IntegerField()
+    per_con = models.IntegerField(blank=True, null=True)
     cod_cta = models.CharField(max_length=10,null = True)
     nom_cta = models.CharField(max_length=48,null = True)
     auxiliar = models.CharField(max_length=1, choices=OPC_BOOL)
@@ -551,29 +584,27 @@ class LINEAS_AHORRO(models.Model):
     termino = models.CharField(max_length=1, choices=OPC_TERMINO)
     per_liq_int = models.CharField(max_length=1, choices=OPC_PER_LIQ_INT)
     cta_por_pas = models.CharField(max_length=10,null = True)
-    fec_ult_liq_int = models.DateField()
+    fec_ult_liq_int = models.DateField(null=True,blank=True)
     saldo_minimo = models.FloatField()
     cod_lin_aho = models.CharField(max_length=2, choices=OPC_PRODUCTO)
     termino = models.CharField(max_length=1, choices=OPC_TERMINO)
     per_liq_int = models.CharField(max_length=1, choices=OPC_PER_LIQ_INT)
     cta_por_pas = models.CharField(max_length=10,null = True)
-    fec_ult_liq_int = models.DateField()
+    fec_ult_liq_int = models.DateField(null=True,blank=True)
     saldo_minimo = models.FloatField()
     class Meta:
         unique_together = [['oficina','cod_lin_aho']]
         db_table = 'lineas_ahorro'
 
-
 class TAS_LIN_AHO(models.Model):
     id = models.AutoField(primary_key=True)
     lin_aho = models.ForeignKey(LINEAS_AHORRO, on_delete=models.CASCADE)
-    fecha_inicial = models.DateField()
-    fecha_final = models.DateField()
+    fecha_inicial = models.DateField(null=True,blank=True)
+    fecha_final = models.DateField(null=True,blank=True)
     tiae = models.FloatField()
     class Meta:
         unique_together = [['lin_aho','fecha_inicial']]
         db_table = 'tas_lin_aho'
-
 
 class CTAS_AHORRO(models.Model):
     id = models.AutoField(primary_key=True)
@@ -582,10 +613,10 @@ class CTAS_AHORRO(models.Model):
     asociado = models.ForeignKey(ASOCIADOS, on_delete=models.CASCADE)
     num_cta = models.CharField(max_length=10,null = True)
     est_cta = models.CharField(max_length=1, choices=OPC_EST_CTA_AHO)
-    fec_apertura = models.DateField()
-    fec_cancela = models.DateField()
+    fec_apertura = models.DateField(null=True,blank=True)
+    fec_cancela = models.DateField(null=True,blank=True)
     exc_tas_mil = models.CharField(max_length=1, choices=OPC_BOOL)
-    fec_ini_exc = models.DateField()
+    fec_ini_exc = models.DateField(null=True,blank=True)
     class Meta:
         unique_together = [['oficina','num_cta']]
         db_table = 'ctas_ahorro'
@@ -595,7 +626,7 @@ class CTA_CDAT_AMP(models.Model):
     cta_aho = models.ForeignKey(CTAS_AHORRO, on_delete=models.CASCADE)
     ampliacion = models.IntegerField() 
     valor = models.FloatField()
-    fecha = models.DateField()
+    fecha = models.DateField(null=True,blank=True)
     plazo_mes = models.IntegerField() 
     tiae = models.FloatField()
     Periodicidad = models.IntegerField()
@@ -609,7 +640,7 @@ class CTA_CDAT_INT(models.Model):
     id = models.BigAutoField(primary_key=True)
     cta_aho = models.ForeignKey(CTAS_AHORRO, on_delete=models.CASCADE)
     cta_amp = models.ForeignKey(CTA_CDAT_AMP, on_delete=models.CASCADE)
-    fecha = models.DateField()
+    fecha = models.DateField(null=True,blank=True)
     cta_int_ret = models.CharField(max_length=10,null = True)
     Valor_int = models.FloatField()
     Valor_ret = models.FloatField()
@@ -623,7 +654,7 @@ class CTA_CDAT_INT_LIQ(models.Model):
     id = models.BigAutoField(primary_key=True)
     cta_aho = models.ForeignKey(CTAS_AHORRO, on_delete=models.CASCADE)
     cta_amp = models.ForeignKey(CTA_CDAT_AMP, on_delete=models.CASCADE)
-    fecha = models.DateField()
+    fecha = models.DateField(null=True,blank=True)
     tip_liq = models.CharField(max_length=1, choices=OPC_LIQ_INT_AHO)
     Val_int = models.FloatField()
     Val_ret = models.FloatField()
@@ -683,7 +714,7 @@ class CREDITOS_CAUSA(models.Model):
     com_des =  models.ForeignKey(HECHO_ECONO, on_delete=models.CASCADE,related_name='cre_des')
     cod_cre = models.CharField(max_length=10,null = True)
     com_ult_cau = models.ForeignKey(HECHO_ECONO, on_delete=models.CASCADE,related_name='cre_cau')
-    fecha =  models.DateField()
+    fecha =  models.DateField(null=True,blank=True)
     cuota = models.IntegerField()
     capital = models.FloatField()
     int_cor = models.FloatField()
@@ -704,10 +735,10 @@ class CREDITOS(models.Model):
     pagare = models.CharField(max_length=10,null = True)
     termino = models.CharField(max_length=1, choices=OPC_CRE_TERMINO)
     por_pag = models.CharField(max_length=1, choices=OPC_CRE_FOR_PAG)
-    fec_des = models.DateField()
-    fec_pag_ini = models.DateField()
-    fec_ree = models.DateField()
-    fec_ven = models.DateField()
+    fec_des = models.DateField(null=True,blank=True)
+    fec_pag_ini = models.DateField(null=True,blank=True)
+    fec_ree = models.DateField(null=True,blank=True)
+    fec_ven = models.DateField(null=True,blank=True)
     val_cuo_ini = models.FloatField()
     val_cuo_act = models.FloatField()
     num_cuo_ini = models.IntegerField()
