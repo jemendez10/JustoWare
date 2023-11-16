@@ -1,5 +1,6 @@
 from datetime import date,datetime
 import os
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Justo_proy.settings')
 
 # Initialize django application
@@ -41,20 +42,20 @@ class DefaultToZeroMixin(models.Model):
     class Meta:
         abstract = True
 
-def asignar_fecha(fecha_str, formato='%Y-%m-%d'):
+def asignar_fecha(fecha_str, formato='%d/%m/%Y'):
     try:
         fecha = datetime.strptime(fecha_str, formato)
-        fecha_validada = fecha.strftime(formato)
+        fecha_validada = fecha.strftime('%Y-%m-%d')
         return fecha_validada
     except ValueError:
         return None
 
 def init():
     response = requests.request("GET", url, headers=headers, data=payload)
-    nom_arc = "c:/aaa/archivo1"
+    nom_arc = "c:/aaa/archivo2"
     anteia1 = response.json()
-    with open(nom_arc, 'w') as archivo:
-        archivo.write(str(anteia1))
+    # with open(nom_arc, 'w') as archivo:
+    #    archivo.write(str(anteia1))
     Cliente = justoAppModels.CLIENTES.objects.filter(codigo='A').first()
     if Cliente == None:
         Cliente=justoAppModels.CLIENTES.objects.create(codigo = "A",
@@ -73,7 +74,7 @@ def init():
         )
     for idsocio in anteia1['flows']:
         doc_ide = anteia1['flows'][idsocio]['user.document.number'] = anteia1['flows'][idsocio]['user.document.number']
-        if doc_ide != '40395800':
+        if doc_ide != '7219477' :
             continue
         # nombre = anteia1['flows'][idsocio]['user.fullName']     # Terceros Nombre
         tipTra = anteia1['flows'][idsocio]['tipoTramite']
@@ -109,8 +110,8 @@ def init():
         Localidad = justoAppModels.LOCALIDADES.objects.filter(cliente=Cliente,
             codigo=anteia1['flows'][idsocio]['user.city.cod']).first()
         Tercero.cod_ciu_res = Localidad
-        print('Fecha ',anteia1['flows'][idsocio]['user.document.expeditionDate'])
-        Tercero.fec_exp_ced = datetime.strptime(anteia1['flows'][idsocio]['user.document.expeditionDate'], "%d-%b-%Y").strftime("%Y-%m-%d")
+        print('Fecha ',anteia1['flows'][idsocio]['user.document.expeditionDate2'])
+        Tercero.fec_exp_ced = datetime.strptime(anteia1['flows'][idsocio]['user.document.expeditionDate2'], "%d/%m/%Y").strftime("%Y-%m-%d")
         Tercero.email = anteia1['flows'][idsocio]['user.email']
         Tercero.fec_act = date.today()
         Tercero.regimen = '49'
@@ -126,7 +127,7 @@ def init():
         Asociado.tercero = Tercero
         Asociado.sexo = anteia1['flows'][idsocio]['user.document.sex']
         Asociado.est_civ = anteia1['flows'][idsocio]['user.civilState'][0]
-        Asociado.fec_nac = datetime.strptime(anteia1['flows'][idsocio]['user.document.birthDate'], "%d-%b-%Y").strftime("%Y-%m-%d")
+        Asociado.fec_nac = datetime.strptime(anteia1['flows'][idsocio]['user.document.birthDateFormated'],"%d/%m/%Y").strftime("%Y-%m-%d")
         Asociado.ciu_res = anteia1['flows'][idsocio]['user.workInfo.city.cod']
         Asociado.zona = anteia1['flows'][idsocio]['user.zone']
         Asociado.estrato = anteia1['flows'][idsocio]['user.estrato']
@@ -136,7 +137,7 @@ def init():
         Asociado.profesion = anteia1['flows'][idsocio]['user.tituloProfesional']
         Asociado.cab_fam = anteia1['flows'][idsocio]['user.houseHolder'][0]  # asociados
         # datetime.strptime(anteia1['flows'][idsocio]['user.document.birthDate'], "%d-%b-%Y").strftime("%Y-%m-%d")
-        Asociado.fec_afi = asignar_fecha(anteia1['flows'][idsocio]['user.document.birthDate'])
+        Asociado.fec_afi = asignar_fecha(anteia1['flows'][idsocio]['form.date'])
         # , "%d-%b-%Y").strftime("%Y-%m-%d")
         Asociado.cargo_emp = anteia1['flows'][idsocio]['user.workInfo.position']
         Asociado.per_a_cargo = anteia1['flows'][idsocio]['user.personsInCharge']
@@ -176,12 +177,13 @@ def init():
         Asociado.pep_fam_nom = anteia1['flows'][idsocio]['user.pep.fam.nombre']
         Asociado.pep_car_pub = anteia1['flows'][idsocio]['user.ostentaCargoPublico'][0]
         Asociado.pep_cargo = anteia1['flows'][idsocio]['user.pep.cargo']
-        Asociado.pep_eje_pod = anteia1['flows'][idsocio]['user.ejercePoder']
-        Asociado.pep_adm_rec_est = anteia1['flows'][idsocio]['user.administraRecursos']
+        Asociado.pep_eje_pod = anteia1['flows'][idsocio]['user.ejercePoder'][0]
+        Asociado.pep_adm_rec_est = anteia1['flows'][idsocio]['user.administraRecursos'][0]
         Asociado.tie_gre_car = anteia1['flows'][idsocio]['coorinoquia.fatca2'][0]
         Asociado.recibe_pag_ext = anteia1['flows'][idsocio]['coorinoquia.fatca3'][0]
         Asociado.recide_ext_mas_186 = anteia1['flows'][idsocio]['coorinoquia.fatca1'][0]
         Asociado.recibe_ing_ext = anteia1['flows'][idsocio]['coorinoquia.fatca4'][0]
+        
         Asociado.save()
         # Estados Financieros
         Estados_Fin = justoAppModels.estados_fin.objects.filter(cliente=Cliente,tercero=Tercero).first()
@@ -193,14 +195,14 @@ def init():
         Estados_Fin.ing_sal_fij = anteia1['flows'][idsocio]['user.financial.salary']
         Estados_Fin.ing_hon = anteia1['flows'][idsocio]['user.financial.honoraries']
         Estados_Fin.ing_pen = anteia1['flows'][idsocio]['user.financial.pension']
-        Estados_Fin.ing_arr = anteia1['flows'][idsocio]['user.financial.otherIncome.act']  # no esta
+        # Estados_Fin.ing_arr = anteia1['flows'][idsocio]['user.financial.otherIncome.act']  # no esta
         Estados_Fin.ing_com = anteia1['flows'][idsocio]['user.financial.pension']  # no esta
         Estados_Fin.ing_ext = anteia1['flows'][idsocio]['user.financial.extra']
         Estados_Fin.ing_otr = anteia1['flows'][idsocio]['user.financial.agregarOtros'][0]
         Estados_Fin.ing_tot = anteia1['flows'][idsocio]['user.financial.totalIncomes']
         Estados_Fin.egr_sec_fin = anteia1['flows'][idsocio]['user.financial.familyExpenses']
         Estados_Fin.egr_cuo_hip = anteia1['flows'][idsocio]['user.financial.otherIncome']
-        Estados_Fin.egr_des_nom = anteia1['flows'][idsocio]['user.financial.hasOtherExpenses'][0]
+        # Estados_Fin.egr_des_nom = anteia1['flows'][idsocio]['user.financial.hasOtherExpenses'][0]
         Estados_Fin.egr_gas_fam = anteia1['flows'][idsocio]['user.financial.personalExpenses']
         Estados_Fin.egr_otr_cre = anteia1['flows'][idsocio]['user.financial.creditCards']
         Estados_Fin.egr_arr = anteia1['flows'][idsocio]['user.financial.leasing']
@@ -237,6 +239,7 @@ def init():
         Estados_Fin.pais_prod_ext =anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.pais']
         Estados_Fin.ciu_prod_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.ciudad']
         Estados_Fin.prom_prod_ext = anteia1['flows'][idsocio]['coorinoquia.productosExtranjeros.monto']
+        Estados_Fin.fec_inf = asignar_fecha(anteia1['flows'][idsocio]['form.date'])
         Estados_Fin.save()
         if tipTra == 'Afiliación y solicitud de crédito':
             fec_hoy = datetime.strptime("2023-11-6", "%Y-%m-%d")

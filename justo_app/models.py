@@ -191,7 +191,14 @@ OPC_GARANTIA = (
     ('A','Admisible'),
     ('H','Hipotecaria'),
     ('D','Deudor Solidario'),
-    ('Otros'),
+    ('Otros')
+)
+
+OPC_ESTADO_ANTEIA = (
+    ('0','No Anteia'),
+    ('1','Validar'),
+    ('2','Por Validar'),
+    ('3','Denegar')
 )
 
 class CLIENTES(models.Model):
@@ -356,8 +363,8 @@ class pagadores(models.Model):
 class ASOCIADOS(DefaultToZeroMixin):
     id = models.AutoField(primary_key=True)
     cod_aso = models.CharField(max_length=12,null = False) 
-    oficina = models.OneToOneField(OFICINAS, on_delete=models.CASCADE, null=True)
-    tercero = models.OneToOneField(TERCEROS, on_delete=models.CASCADE, null=True)
+    oficina = models.ForeignKey(OFICINAS, on_delete=models.CASCADE, null=True)
+    tercero = models.ForeignKey(TERCEROS, on_delete=models.CASCADE, null=True)
     sexo = models.CharField(max_length=1,null = True,blank = True)
     est_civ = models.CharField(max_length=1, choices=OPC_EST_CIV)
     fec_nac = models.DateField(null = True,blank = True)
@@ -413,6 +420,7 @@ class ASOCIADOS(DefaultToZeroMixin):
     recibe_pag_ext = models.CharField(max_length=1, choices=OPC_BOOL)
     recide_ext_mas_186 = models.CharField(max_length=1, choices=OPC_BOOL)
     recibe_ing_ext = models.CharField(max_length=1, choices=OPC_BOOL)
+    estado_anteia = models.CharField(max_length=1, choices=OPC_ESTADO_ANTEIA,null=False,default=2)
     class Meta:
         unique_together = [['oficina','cod_aso']]
         db_table = 'asociados'
@@ -455,7 +463,7 @@ class ASO_REF_PER(models.Model):
 
 class ORIGINACION(models.Model):
     asociado = models.ForeignKey(ASOCIADOS, on_delete=models.CASCADE)
-    lin_cre = models.CharField(max_length=30,null = False)
+    lin_cre = models.CharField(max_length=80,null = False)
     monto = models.FloatField(blank=True, null=True)
     plazo = models.IntegerField(blank=True, null=True)
     gar_cre_sol = models.CharField(max_length=1,null = False)
