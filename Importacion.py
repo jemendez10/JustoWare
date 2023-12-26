@@ -1006,7 +1006,7 @@ def codeudores():
     print('          ...  ',datetime.now())
 
 def init():
-    inicio()
+    #   inicio()
     #   terceros()
     #   pagadores()
     #   usuarios()
