@@ -11,3 +11,4 @@ def migracion(request):
         for row in csv_reader:    
             print(row['NIT'])
     return HttpResponse("")
+
