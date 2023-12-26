@@ -11,7 +11,7 @@ import inflect
 # Create your views here.
 
 def Inicio(request):
-    return render(request, 'Inicio.html')
+    return render(request, 'inicio.html')
 
 
 def Registrar_Usuario(request):
@@ -58,7 +58,7 @@ def Iniciar_Sesion(request):
         })
         else:
             login(request, usuario)
-            return redirect('Listar_Ciiu')    
+            return redirect('JustoAdm')
 
 
 def JustoAdm(request):
