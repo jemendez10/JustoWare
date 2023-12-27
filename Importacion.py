@@ -431,19 +431,13 @@ def socios():
     print('Socios....  ',datetime.now())
     Cliente = justoAppModels.CLIENTES.objects.filter(codigo='A').first()
     Oficina = justoAppModels.OFICINAS.objects.filter(codigo='A0001').first()
-    if Oficina == None:
-        Oficina=justoAppModels.OFICINAS.objects.create(cliente = Cliente,codigo = "A0001",
-        contabiliza = 'S',
-        nombre_oficina = 'Oficina Principal',
-        responsable = 'Jose Guillermo Prieto López',
-        celular = '3153263722',
-    )
     with open('c:/ajusto/csv/s01socios.csv', 'r') as file:
         csv_reader = csv.DictReader(file,delimiter=';')
         for row in csv_reader:
-            tercero = justoAppModels.TERCEROS.objects.filter(cliente=Cliente,
-                        doc_ide = row['s01nit']).first()
-            if tercero == None:
+            Tercero = justoAppModels.TERCEROS.objects.filter(cliente=Cliente,
+                        cla_doc = 'C',doc_ide = row['s01codsoc']).first()
+            if Tercero == None:
+                print('No Hay Tercero ',row['s01nit'])
                 continue
             Socio = justoAppModels.ASOCIADOS.objects.filter(
                     oficina=Oficina,
@@ -456,6 +450,7 @@ def socios():
             pagador = justoAppModels.pagadores.objects.filter(
                     cliente=Cliente,
                     codigo=row['s01codent']).first()
+            Socio.tercero = Tercero
             Socio.sexo = row['s01sexo'][:1]
             Socio.est_civ = row['s01estciv']
             Socio.fec_nac = asignar_fecha(row['s01fecnac'])
@@ -986,6 +981,35 @@ def creditos():
 #   s12fecava;s12codseg;s12costo;s12individual;s12enobs;s12aprobado; s12catevacar
     print('              ',datetime.now())
 
+def asigna_com_cre():
+    print('Recorrido...  ',datetime.now())
+    Cliente = justoAppModels.CLIENTES.objects.filter(codigo='A').first()
+    Oficina = justoAppModels.OFICINAS.objects.filter(codigo='A0001').first()
+    DetallesProSel = justoAppModels.DETALLE_PROD.objects.filter(concepto='CUOTA').all()
+    ya = 0
+    for oDP in DetallesProSel:
+        if ya == 0:
+            print('Recorrido...  ',datetime.now())
+        ya = ya + 1
+        oHE = oDP.hecho_econo
+        oCtaCon = justoAppModels.PLAN_CTAS.objects.filter(cliente=Cliente,per_con= oHE.fecha.year,cod_cta='14433501').first()
+        if oCtaCon == None:
+            print('No hay Cta Con ',oDP.subcuenta)
+        Credito = justoAppModels.CREDITOS.objects.filter(oficina=Oficina,cod_cre = oDP.subcuenta).first()
+        if Credito == None:
+            print('No hay Credito ',oDP.subcuenta)
+            continue
+        oTer = Credito.socio.tercero
+        oHallado = justoAppModels.DETALLE_ECONO.objects.filter(hecho_econo=oHE,tercero=oTer,cuenta=oCtaCon).first()
+        if oHallado == None:
+            print('No hay Detalle Cr =',oDP.subcuenta,'  Comp=',oHE.docto_conta.codigo,oHE.numero,oHE.fecha)
+            continue
+        oHallado.item_concepto = 'Kapita'
+        oHallado.detalle_prod = oDP
+        oHallado.detalle = oHallado.detalle.strip()+','+oDP.subcuenta if len(oHallado.detalle.strip())>0 else oDP.subcuenta
+        oHallado.save()    
+    print('         ...  ',datetime.now(),ya)
+
 def codeudores():
     print('Codeudores...  ',datetime.now())
     Cliente = justoAppModels.CLIENTES.objects.filter(codigo='A').first()
@@ -1016,8 +1040,9 @@ def init():
     #   plan_ctas()
     #   conceptos()
     #   comprobantes()
-    detalle_prod()
+    #   detalle_prod()
     #   detalle_econo()
+    asigna_com_cre()
     #   est_fin()
     #   socios()
     #   bene_aso()
