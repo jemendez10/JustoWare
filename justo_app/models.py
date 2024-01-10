@@ -173,6 +173,12 @@ OPC_CRE_EST_JUR = (
         ('T', 'Castigado'),
     )
 
+OPC_CAMBIOS_CRE = (
+        ('2','Ajuste'),
+        ('3','Des Pronto Pago'),
+        ('4','Castigo/Condo'),
+)
+
 OPC_CRE_CATEGORIA = (
         ('A', 'Normal'),
         ('B', 'Apreciable'),
@@ -220,7 +226,29 @@ class XDOC_ZEP(models.Model):
     class Meta:
         unique_together = [['per_con','clase_zep']]
         db_table = 'xdoc_zep'
-    
+
+class XMOV_CRE(models.Model):
+    id = models.AutoField(primary_key=True)
+    cod_cre = models.CharField(max_length=10, null=False)
+    est_jur = models.CharField(max_length=1, null=False)
+    fec_ulp_pag = models.DateField(null=True)
+    min_fecha = models.DateField(null=True)
+    max_fecha = models.DateField(null=True)
+    clase = models.CharField(max_length=1, null=False)
+    docto = models.CharField(max_length=10, null=False)
+    tip_mov = models.CharField(max_length=1, null=False)
+    fecha = models.DateField(null=True)
+    capital = models.FloatField(null=True)
+    int_cor = models.FloatField(null=True)
+    int_mor = models.FloatField(null=True)
+    acreed = models.FloatField(null=True)
+    estado = models.CharField(max_length=1, null=False)
+    class Meta:
+        indexes = [
+            models.Index(fields=['tip_mov']),
+        ]
+        db_table = 'xmov_cre'
+
 class CLIENTES(models.Model):
     id = models.SmallAutoField(primary_key=True)
     codigo = models.CharField(max_length=1, null=False)
@@ -280,6 +308,26 @@ class USUARIOS(models.Model):
         unique_together = [['oficina','login']]
         db_table = 'usuarios'
 
+class MOV_CAJA(models.Model):
+    id = models.SmallAutoField(primary_key=True)
+    oficina = models.ForeignKey(OFICINAS, on_delete=models.CASCADE, null=True)
+    fecha = models.DateField(null = True,blank = True)
+    cod_caj = models.CharField(max_length=2, null=False)
+    jornada = models.CharField(max_length=1, null=False)
+    saldo_ini = models.FloatField(null = True,blank = True)
+    debitos = models.FloatField(null = True,blank = True)
+    creditos = models.FloatField(null = True,blank = True)
+    val_che_dev = models.FloatField(null = True,blank = True)
+    saldo_fin = models.FloatField(null = True,blank = True)
+    diferencia = models.FloatField(null = True,blank = True)
+    val_cheques = models.FloatField(null = True,blank = True)
+    val_vales = models.FloatField(null = True,blank = True)
+    cerrado = models.CharField(max_length=1, null=False,choices = OPC_BOOL)
+    monedas = models.JSONField(null = True,blank = True)
+    class Meta:
+        unique_together = [['oficina','fecha','cod_caj','jornada']]
+        db_table = 'mov_caja'
+
 class cierre_mes(models.Model):
     id = models.SmallAutoField(primary_key=True)
     oficina = models.ForeignKey(OFICINAS, on_delete=models.CASCADE, null=True)
@@ -311,26 +359,6 @@ class CONCEPTOS(models.Model):
     class Meta:
         unique_together = [['cliente','cod_con']]
         db_table = 'conceptos'
-
-class MOV_CAJA(models.Model):
-    id = models.SmallAutoField(primary_key=True)
-    oficina = models.ForeignKey(OFICINAS, on_delete=models.CASCADE, null=True)
-    fecha = models.DateField(null = True,blank = True)
-    cod_caj = models.CharField(max_length=2, null=False)
-    jornada = models.CharField(max_length=1, null=False)
-    saldo_ini = models.FloatField(null = True,blank = True)
-    debitos = models.FloatField(null = True,blank = True)
-    creditos = models.FloatField(null = True,blank = True)
-    val_che_dev = models.FloatField(null = True,blank = True)
-    saldo_fin = models.FloatField(null = True,blank = True)
-    diferencia = models.FloatField(null = True,blank = True)
-    val_cheques = models.FloatField(null = True,blank = True)
-    val_vales = models.FloatField(null = True,blank = True)
-    cerrado = models.CharField(max_length=1, null=False,choices = OPC_BOOL)
-    monedas = models.JSONField(null = True,blank = True)
-    class Meta:
-        unique_together = [['oficina','fecha','cod_caj','jornada']]
-        db_table = 'mov_caja'
 
 class LOCALIDADES(models.Model):
     # id = models.AutoField(primary_key=True)
@@ -580,38 +608,6 @@ class ORIGINACION(models.Model):
         unique_together = [['asociado']]
         db_table = 'originacion'
 
-class DOCTO_CONTA(models.Model):
-    id = models.AutoField(primary_key=True)
-    oficina = models.ForeignKey(OFICINAS, on_delete=models.CASCADE)
-    per_con = models.IntegerField(blank=True, null=True)
-    codigo = models.IntegerField(blank=False, null=False)
-    nom_cto = models.CharField(max_length=12,null = False)
-    nombre = models.CharField(max_length=44,null = False)
-    doc_admin = models.CharField(max_length=1,blank=True, null=True,choices=OPC_BOOL)
-    doc_caja = models.CharField(max_length=1,blank=True, null=True,choices=OPC_BOOL)
-    inicio_nuevo_per = models.CharField(max_length=1, choices=OPC_BOOL)
-    consecutivo = models.IntegerField(blank=True, null=True)
-    id_ds = models.BigIntegerField(null = True,db_index=True)  
-    class Meta:
-        unique_together = [['oficina','per_con','codigo']]
-        db_table = 'docto_conta'
-
-class HECHO_ECONO(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    docto_conta = models.ForeignKey(DOCTO_CONTA, on_delete=models.CASCADE)
-    numero = models.IntegerField(blank=True, null=True)
-    fecha = models.DateField(null=True,blank=True)
-    descripcion = models.CharField(max_length=64,null = True)
-    anulado = models.CharField(max_length=1, choices=OPC_BOOL)
-    protegido = models.CharField(max_length=1, choices=OPC_BOOL)
-    fecha_prot = models.DateTimeField(auto_now = True)
-    usuario = models.CharField(max_length=16,null = True)
-    canal = models.CharField(max_length=3, choices=OPC_CANALES)
-    id_ds = models.BigIntegerField(null = True)  
-    class Meta:
-        unique_together = [['docto_conta','numero']]
-        db_table = 'hecho_econo'
-
 class PLAN_CTAS(models.Model):
     id = models.AutoField(primary_key=True)
     cliente = models.ForeignKey(CLIENTES, on_delete=models.CASCADE)
@@ -648,8 +644,41 @@ class CENTROCOSTOS(models.Model):
         unique_together = [['cliente','codigo']]
         db_table = 'centro_costos'
 
+class DOCTO_CONTA(models.Model):
+    id = models.AutoField(primary_key=True)
+    oficina = models.ForeignKey(OFICINAS, on_delete=models.CASCADE)
+    per_con = models.IntegerField(blank=True, null=True)
+    codigo = models.IntegerField(blank=False, null=False)
+    nom_cto = models.CharField(max_length=12,null = False)
+    nombre = models.CharField(max_length=44,null = False)
+    doc_admin = models.CharField(max_length=1,blank=True, null=True,choices=OPC_BOOL)
+    doc_caja = models.CharField(max_length=1,blank=True, null=True,choices=OPC_BOOL)
+    inicio_nuevo_per = models.CharField(max_length=1, choices=OPC_BOOL)
+    consecutivo = models.IntegerField(blank=True, null=True)
+    id_ds = models.BigIntegerField(null = True,db_index=True)  
+    class Meta:
+        unique_together = [['oficina','per_con','codigo']]
+        db_table = 'docto_conta'
+
+class HECHO_ECONO(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    docto_conta = models.ForeignKey(DOCTO_CONTA, on_delete=models.CASCADE)
+    numero = models.IntegerField(blank=True, null=True)
+    fecha = models.DateField(null=True,blank=True)
+    descripcion = models.CharField(max_length=64,null = True)
+    anulado = models.CharField(max_length=1, choices=OPC_BOOL)
+    protegido = models.CharField(max_length=1, choices=OPC_BOOL)
+    fecha_prot = models.DateTimeField(auto_now = True)
+    usuario = models.CharField(max_length=16,null = True)
+    canal = models.CharField(max_length=3, choices=OPC_CANALES)
+    id_ds = models.BigIntegerField(null = True,db_index=True)  
+    class Meta:
+        unique_together = [['docto_conta','numero']]
+        db_table = 'hecho_econo'
+
 class DETALLE_PROD(models.Model):
     id = models.BigAutoField(primary_key=True)
+    oficina = models.ForeignKey(OFICINAS,on_delete=models.CASCADE,null = True)
     hecho_econo = models.ForeignKey(HECHO_ECONO, on_delete=models.CASCADE)
     centro_costo = models.ForeignKey(CENTROCOSTOS, on_delete=models.CASCADE,null = True)
     producto = models.CharField(max_length=2, choices=OPC_PRODUCTO)
@@ -660,7 +689,10 @@ class DETALLE_PROD(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add =True)
     fecha_actualizacion = models.DateTimeField(auto_now = True)
     class Meta:
-        unique_together = [['hecho_econo','producto','concepto','subcuenta']]
+        unique_together = [['hecho_econo','producto','subcuenta','concepto']]
+        indexes = [
+            models.Index(fields=['oficina','producto','subcuenta']),
+        ]
         db_table = 'detalle_prod'
     
 class DETALLE_ECONO(models.Model):
@@ -673,19 +705,15 @@ class DETALLE_ECONO(models.Model):
     detalle = models.TextField(null = True)
     debito = models.FloatField(null = True)
     credito = models.FloatField(null = True)
+    valor_1 = models.FloatField(null = True)
+    valor_2 = models.FloatField(null = True)
     id_ds = models.BigIntegerField(null = True)  
     class Meta:
-        unique_together = [['hecho_econo','cuenta','tercero']]
+    #    unique_together = [['hecho_econo','cuenta','tercero','detalle_prod']]
+        indexes = [
+            models.Index(fields=['hecho_econo','cuenta','tercero','detalle_prod']),
+                 ]
         db_table = 'detalle_econo'
-
-class DET_ECO_RET(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    detalle_econo = models.ForeignKey(DETALLE_ECONO, on_delete=models.CASCADE)
-    tip_ret = models.TextField()
-    valor_base = models.FloatField()
-    porcentaje = models.FloatField()
-    class Meta:
-        db_table = 'det_eco_ret'
 
 class LINEAS_AHORRO(models.Model):
     id = models.SmallAutoField(primary_key=True)
@@ -855,53 +883,18 @@ class IMP_CON_CRE_INT(models.Model):
         unique_together = [['cliente','cod_imp','categoria']]
         db_table = 'imp_con_cre_int'
 
-class CREDITOS_CAUSA(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    oficina = models.ForeignKey(OFICINAS, on_delete=models.CASCADE,related_name='cre_ofi')
-    com_des =  models.ForeignKey(HECHO_ECONO, on_delete=models.CASCADE,related_name='cre_des')
-    cod_cre = models.CharField(max_length=10,null = True)
-    com_ult_cau = models.ForeignKey(HECHO_ECONO, on_delete=models.CASCADE,related_name='cre_cau')
-    fecha =  models.DateField(null=True,blank=True)
-    cuota = models.IntegerField()
-    capital = models.FloatField()
-    int_cor = models.FloatField()
-    pol_seg = models.FloatField()
-    class Meta:
-        unique_together = [['oficina','com_des','cod_cre','com_ult_cau','fecha']]
-        db_table = 'creditos_causa'
-
-class DESTINO_CRE(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    cliente = models.ForeignKey(CLIENTES, on_delete=models.CASCADE)
-    codigo = models.IntegerField()
-    descripcion = models.CharField(max_length=50,null = True)
-    class Meta:
-        unique_together = [['cliente','codigo']]
-        db_table = 'destino_cre' 
-
-class CAT_DES_DIA_CRE(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    cliente = models.ForeignKey(CLIENTES, on_delete=models.CASCADE)
-    codigo = models.IntegerField()
-    categoria = models.CharField(max_length=1,null = False,choices=OPC_CRE_CATEGORIA)
-    minimo_dias = models.IntegerField(null = True)
-    maximo_dias = models.IntegerField(null = True)
-    class Meta:
-        unique_together = [['cliente','codigo','categoria']]
-        db_table = 'cat_des_dia_cre' 
-
 class CREDITOS(models.Model):
     id = models.BigAutoField(primary_key=True)
     oficina = models.ForeignKey(OFICINAS, on_delete=models.CASCADE)
     imputacion = models.ForeignKey(IMP_CON_CRE, on_delete=models.CASCADE,null = True)
     socio = models.ForeignKey(ASOCIADOS, on_delete=models.CASCADE,null = True)
-    com_des = models.ForeignKey(HECHO_ECONO, on_delete=models.CASCADE,null = True)
+    com_des = models.ForeignKey(DETALLE_PROD, on_delete=models.CASCADE,null = True)
     cod_cre = models.CharField(max_length=10,null = True)
-    com_ult_cau = models.ForeignKey(CREDITOS_CAUSA, on_delete=models.CASCADE,null = True)
     libranza = models.CharField(max_length=10,null = True)
     pagare = models.CharField(max_length=16,null = True)
     termino = models.CharField(max_length=1, choices=OPC_CRE_TERMINO)
     por_pag = models.CharField(max_length=1, choices=OPC_CRE_FOR_PAG)
+    cap_ini = models.FloatField(null=True,blank=True)
     fec_des = models.DateField(null=True,blank=True)
     fec_pag_ini = models.DateField(null=True,blank=True)
     fec_ree = models.DateField(null=True,blank=True)
@@ -930,6 +923,53 @@ class CREDITOS(models.Model):
     class Meta:
         unique_together = [['oficina','cod_cre']]
         db_table = 'creditos'
+
+class CAMBIOS_CRE(models.Model):
+    id = models.AutoField(primary_key=True)
+    det_pro =  models.ForeignKey(DETALLE_PROD, on_delete=models.CASCADE,null=False,default = None)
+    tip_cam =  models.CharField(max_length=1,null = True,choices=OPC_CAMBIOS_CRE)
+    capital = models.FloatField(null=True,blank=True)
+    int_cor = models.FloatField(null=True,blank=True)
+    int_mor = models.FloatField(null=True,blank=True)
+    pol_seg = models.FloatField(null=True,blank=True)
+    des_pp = models.FloatField(null=True,blank=True)
+    acreedor = models.FloatField(null=True,blank=True)
+    class Meta:
+        unique_together = [['det_pro','tip_cam']]
+        db_table = 'cambios_cre'    
+
+class CREDITOS_CAUSA(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    oficina = models.ForeignKey(OFICINAS, on_delete=models.CASCADE,default = None)
+    cod_cre = models.CharField(max_length=10,null = True)
+    comprobante =  models.ForeignKey(DETALLE_PROD, on_delete=models.CASCADE,null = True,default=None)
+    cuota = models.IntegerField(null=False,blank=False,default=0)
+    fecha =  models.DateField(null=True,blank=True)
+    capital = models.FloatField(null=True,blank=True)
+    int_cor = models.FloatField(null=True,blank=True)
+    class Meta:
+        unique_together = [['oficina','cod_cre','comprobante','cuota']]
+        db_table = 'creditos_causa'
+
+class DESTINO_CRE(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    cliente = models.ForeignKey(CLIENTES, on_delete=models.CASCADE)
+    codigo = models.IntegerField()
+    descripcion = models.CharField(max_length=50,null = True)
+    class Meta:
+        unique_together = [['cliente','codigo']]
+        db_table = 'destino_cre' 
+
+class CAT_DES_DIA_CRE(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    cliente = models.ForeignKey(CLIENTES, on_delete=models.CASCADE)
+    codigo = models.IntegerField()
+    categoria = models.CharField(max_length=1,null = False,choices=OPC_CRE_CATEGORIA)
+    minimo_dias = models.IntegerField(null = True)
+    maximo_dias = models.IntegerField(null = True)
+    class Meta:
+        unique_together = [['cliente','codigo','categoria']]
+        db_table = 'cat_des_dia_cre' 
     
 class CODEUDORES(models.Model):
     id = models.BigAutoField(primary_key=True)
