@@ -62,7 +62,7 @@ def Iniciar_Sesion(request):
 
 
 def JustoAdm(request):
-    return render(request, 'JustoAdm.html')
+    return render(request, 'jw.html')
 
 
 def Restablecer_Contraseña(request):
