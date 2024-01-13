@@ -15,16 +15,19 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from justo_app import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.Inicio, name='Inicio'),
-    path('Registrar_Usuario/', views.Registrar_Usuario, name='Registrar_Usuario'),
-    path('Iniciar_Sesion/', views.Iniciar_Sesion, name='Iniciar_Sesion'),
-    path('Cerrar_Sesion/', views.Cerrar_Sesion, name='Cerrar_Sesion'),
-    path('JustoAdm/', views.JustoAdm, name='JustoAdm'),
-    path('num_let', views.convertir_numero_a_letras, name='Num_Let'),
-    path('dv', views.calcular_nit_dv, name='Calcula_DV'),
+    # path('Registrar_Usuario/', views.Registrar_Usuario, name='Registrar_Usuario'),
+    # path('Iniciar_Sesion/', views.Iniciar_Sesion, name='Iniciar_Sesion'),
+    # path('Cerrar_Sesion/', views.Cerrar_Sesion, name='Cerrar_Sesion'),
+    # path('JustoAdm/', views.JustoAdm, name='JustoAdm'),
+    # path('num_let', views.convertir_numero_a_letras, name='Num_Let'),
+    # path('dv', views.calcular_nit_dv, name='Calcula_DV'),
+    path('clientes/', include('clientes_app.urls')),
+    path('justo/', include('justo_app.urls')),
+    
 ]

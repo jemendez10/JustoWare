@@ -1,4 +1,13 @@
 from django.db import models
+import re
+from django.core.exceptions import ValidationError
+
+
+def validate_numeric(value):
+    if not re.match(r'^[0-9]+$', value):
+        raise ValidationError(
+            'El número de celular debe contener solo dígitos numéricos.')
+
 
 OPC_BOOL = (('S','Si'),('N','No'))
 

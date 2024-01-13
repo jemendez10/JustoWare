@@ -7,6 +7,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required
 import inflect
+from num2words import num2words
 
 # Create your views here.
 
@@ -62,7 +63,7 @@ def Iniciar_Sesion(request):
 
 
 def JustoAdm(request):
-    return render(request, 'jw.html')
+    return render(request, 'JustoAdm.html')
 
 
 def Restablecer_Contraseña(request):
@@ -72,8 +73,7 @@ def Restablecer_Contraseña(request):
 def convertir_numero_a_letras(request):
     if request.method == 'POST':
         numero = request.POST.get('numero')
-        p = inflect.engine()
-        numero_en_letras = p.number_to_words(numero).upper()
+        numero_en_letras = num2words(numero, lang = 'es').upper()
         return render(request, 'resultado.html', {'numero_en_letras': numero_en_letras})
     return render(request, 'formulario.html')
 
