@@ -55,7 +55,7 @@ def Iniciar_Sesion(request):
         if usuario is None:
             return render(request, 'Iniciar_Sesion.html', {
             'form': AuthenticationForm,
-            'error': 'El Usuario o la contraseña es incorrecto'
+            'error': 'El Usuario o la contraseña no es correcto'
         })
         else:
             login(request, usuario)

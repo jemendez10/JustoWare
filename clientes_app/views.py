@@ -37,17 +37,17 @@ class Lista_Clientes(ListView):
 @login_required
 def Cliente_Creado(request, CLIENTES_id):
     if request.method == 'GET':
-        Clientes = get_object_or_404(CLIENTES, pk = CLIENTES_id)
+        Clientes = get_object_or_404(CLIENTES, pk=CLIENTES_id)
         form = CrearForm(instance=Clientes)
-        return render(request, 'Cliente_Creado.hmtl',{'Clientes': Clientes, 'form':form})
+        return render(request, 'Cliente_Creado.html',{'Clientes': Clientes, 'form':form})
     else:
         try:
-            cliente = get_object_or_404(CLIENTES, pk = CLIENTES_id)
-            form = CrearForm(request.POST, instance = cliente)
+            Clientes = get_object_or_404(CLIENTES, pk=CLIENTES_id)
+            form = CrearForm(request.POST, instance = Clientes)
             form.save()
             return redirect('Listar_Clientes')
         except ValueError:
-            return render(request, 'Cliente_Creado.html',{'Clientes': cliente, 'form': form,'error':'Error al actualizar'})
+            return render(request, 'Cliente_Creado.html',{'Clientes': Clientes, 'form': form,'error':'Error al actualizar'})
         
 
 @login_required
