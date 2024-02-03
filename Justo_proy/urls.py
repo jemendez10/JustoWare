@@ -29,5 +29,7 @@ urlpatterns = [
     # path('dv', views.calcular_nit_dv, name='Calcula_DV'),
     path('clientes/', include('clientes_app.urls')),
     path('justo/', include('justo_app.urls')),
+    path('localidades/', include('localidades_app.urls')),
+    path('terceros/', include('terceros_app.urls')),
     
 ]

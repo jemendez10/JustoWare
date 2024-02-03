@@ -7,9 +7,9 @@
     <li>
         <a href="{% url 'Listar_Clientes' %}">
             <h1>{{Lista.codigo}}</h1>
-            <p>{{Lista.nombre }}</p>
+            <!-- <p>{{Lista.nombre }}</p> -->
             <p>{{Lista.sigla}}</p>
-            <p>{{Lista.codigo}}</p>
+            <!-- <p>{{Lista.codigo}}</p>
             <p>{{Lista.doc_ide}}</p>
             <p>{{Lista.dv}}</p>
             <p>{{Lista.sigla}}</p>
@@ -35,22 +35,22 @@
             <p>{{Lista.num_lic}}</p>
             <p>{{Lista.lic_act}}</p>
             <p>{{Lista.ini_lic}}</p>
-            <p>{{Lista.fin_lic}}</p>
+            <p>{{Lista.fin_lic}}</p> -->
             
         </a>
-    </li>
+    <!-- </li>
     <label for="exampleDataList" class="form-label">Datalist example</label>
     <input class="form-control" list={{Lista.cliente}} id="exampleDataList" placeholder="Escribe para buscar...">
     <datalist id={{Lista.cliente}}>
         <a href="{% url 'Listar_Clientes'%}">
             <p>{{Lista.cliente}}</p>
         </a>
-        <!-- <option value="San Francisco">
+        <option value="San Francisco">
             <option value="New York">
             <option value="Seattle">
             <option value="Los Angeles">
             <option value="Chicago"> -->
-    </datalist>
+    <!-- </datalist> -->
     {% endfor%}
 </ul>
 {% endblock %}
