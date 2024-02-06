@@ -1,56 +1,131 @@
-
+{% extends 'Base.html' %}
 {% block content %}
-<h1> Lista de Clientes</h1>
+<div class="content-wrapper">
+    <div class="page-header">
+        <h3 class="page-title">Lista de Clientes </h3>
+    </div>
+    <div class="grid-margin stretch-card my-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="row d-flex align-items-end">
+                    <div class="col-md-3">
+                        <label for="">Fecha Inicio Licencia</label>
+                        <select name="" id="" class="form-select">
+                            <option value=""></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="">Nit</label>
+                        <input type="text" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="">Codigo</label>
+                        <input type="text" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'Crear_Cliente' %}" class="btn btn-primary"><i class="mdi mdi-plus mx-2"></i> Agregar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<ul>
-    {% for Lista in Lista %}
-    <li>
-        <a href="{% url 'Listar_Clientes' %}">
-            <h1>{{Lista.codigo}}</h1>
-            <p>{{Lista.nombre }}</p>
-            <p>{{Lista.sigla}}</p>
-            <p>{{Lista.codigo}}</p>
-            <p>{{Lista.doc_ide}}</p>
-            <p>{{Lista.dv}}</p>
-            <p>{{Lista.sigla}}</p>
-            <p>{{Lista.nombre}}</p>
-            <p>{{Lista.direccion}}</p></p>
-            <p>{{Lista.telefono}}</p>
-            <p>{{Lista.celular}}</p>
-            <p>{{Lista.ciudad}}</p>
-            <p>{{Lista.email}}</p>
-            <p>{{Lista.dominio}}</p>
-            <p>{{Lista.nit_ger}}</p>
-            <p>{{Lista.nom_ger}}</p>
-            <p>{{Lista.nit_con}}</p>
-            <p>{{Lista.nom_con}}</p>
-            <p>{{Lista.tp_con}}</p>
-            <p>{{Lista.nit_rev_fis}}</p>
-            <p>{{Lista.nom_rev_fis}}</p>
-            <p>{{Lista.tp_rev_fis}}</p>
-            <p>{{Lista.age_ret}}</p>
-            <p>{{Lista.ret_iva}}</p>
-            <p>{{Lista.aut_ret}}</p>
-            <p>{{Lista.logo}}</p>
-            <p>{{Lista.num_lic}}</p>
-            <p>{{Lista.lic_act}}</p>
-            <p>{{Lista.ini_lic}}</p>
-            <p>{{Lista.fin_lic}}</p>
-            
-        </a>
-    </li>
-    <label for="exampleDataList" class="form-label">Datalist example</label>
-    <input class="form-control" list={{Lista.cliente}} id="exampleDataList" placeholder="Escribe para buscar...">
-    <datalist id={{Lista.cliente}}>
-        <a href="{% url 'Listar_Clientes'%}">
-            <p>{{Lista.cliente}}</p>
-        </a>
-        <!-- <option value="San Francisco">
-            <option value="New York">
-            <option value="Seattle">
-            <option value="Los Angeles">
-            <option value="Chicago"> -->
-    </datalist>
-    {% endfor%}
-</ul>
+    </div>
+    <div class="grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Tabla de datos</h4>
+                <div class="row">
+                    <div class="col-12">
+                        <table id="order-listing" class="table table-borderless g-3 px-3" style="border-collapse: separate;border-spacing: 0 1.2rem;">
+                            <thead>
+                            <tr>
+                                <th>Codigo</th>
+                                <th>Sigla</th>
+                                <th>Nombre</th>
+                                <th>Enviado</th>
+                                <th>Nit</th>
+                                <th>Celular</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for Lista in Lista %}
+                            <tr class="rounded shadow">
+                                <td>{{Lista.codigo}}</td>
+                                <td>{{Lista.sigla}}</td>
+                                <td>{{Lista.nombre }}</td>
+                                <td>{{Lista.doc_ide}}</td>
+                                <td>{{Lista.celular}}</td>
+                                <td>$3200</td>
+                                <td>
+                                    <label class="btn p-2 btn-inverse-info ">En espera</label>
+                                </td>
+                                <td>
+                                    <button class="btn p-2 btn-inverse-primary">Ver</button>
+                                </td>
+                            </tr>
+                            {% endfor%}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!--<h1> Lista de Clientes</h1>-->
+
+<!--<ul>-->
+<!--    {% for Lista in Lista %}-->
+<!--    <li>-->
+<!--        <a href="{% url 'Listar_Clientes' %}">-->
+<!--            <h1>{{Lista.codigo}}</h1>-->
+<!--            <p>{{Lista.nombre }}</p>-->
+<!--            <p>{{Lista.sigla}}</p>-->
+<!--            <p>{{Lista.codigo}}</p>-->
+<!--            <p>{{Lista.doc_ide}}</p>-->
+<!--            <p>{{Lista.dv}}</p>-->
+<!--            <p>{{Lista.sigla}}</p>-->
+<!--            <p>{{Lista.nombre}}</p>-->
+<!--            <p>{{Lista.direccion}}</p></p>-->
+<!--            <p>{{Lista.telefono}}</p>-->
+<!--            <p>{{Lista.celular}}</p>-->
+<!--            <p>{{Lista.ciudad}}</p>-->
+<!--            <p>{{Lista.email}}</p>-->
+<!--            <p>{{Lista.dominio}}</p>-->
+<!--            <p>{{Lista.nit_ger}}</p>-->
+<!--            <p>{{Lista.nom_ger}}</p>-->
+<!--            <p>{{Lista.nit_con}}</p>-->
+<!--            <p>{{Lista.nom_con}}</p>-->
+<!--            <p>{{Lista.tp_con}}</p>-->
+<!--            <p>{{Lista.nit_rev_fis}}</p>-->
+<!--            <p>{{Lista.nom_rev_fis}}</p>-->
+<!--            <p>{{Lista.tp_rev_fis}}</p>-->
+<!--            <p>{{Lista.age_ret}}</p>-->
+<!--            <p>{{Lista.ret_iva}}</p>-->
+<!--            <p>{{Lista.aut_ret}}</p>-->
+<!--            <p>{{Lista.logo}}</p>-->
+<!--            <p>{{Lista.num_lic}}</p>-->
+<!--            <p>{{Lista.lic_act}}</p>-->
+<!--            <p>{{Lista.ini_lic}}</p>-->
+<!--            <p>{{Lista.fin_lic}}</p>-->
+<!--            -->
+<!--        </a>-->
+<!--    </li>-->
+<!--    <label for="exampleDataList" class="form-label">Datalist example</label>-->
+<!--    <input class="form-control" list={{Lista.cliente}} id="exampleDataList" placeholder="Escribe para buscar...">-->
+<!--    <datalist id={{Lista.cliente}}>-->
+<!--        <a href="{% url 'Listar_Clientes'%}">-->
+<!--            <p>{{Lista.cliente}}</p>-->
+<!--        </a>-->
+<!--        &lt;!&ndash; <option value="San Francisco">-->
+<!--            <option value="New York">-->
+<!--            <option value="Seattle">-->
+<!--            <option value="Los Angeles">-->
+<!--            <option value="Chicago"> &ndash;&gt;-->
+<!--    </datalist>-->
+<!--    {% endfor%}-->
+<!--</ul>-->
 {% endblock %}

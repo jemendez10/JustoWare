@@ -132,8 +132,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Define la ruta de la carpeta 'assets' dentro del directorio principal
+ASSETS_DIR = os.path.join(BASE_DIR, 'assets')
 STATICFILES_DIRS =[
-    os.path.join(BASE_DIR,'assets')
+    ASSETS_DIR,
 ]
 
 # Default primary key field type

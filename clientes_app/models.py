@@ -35,7 +35,7 @@ class CLIENTES(models.Model):
     logo = models.FileField(max_length=254, null=True, blank=True, verbose_name='Logo')
     num_lic = models.CharField(max_length=8, verbose_name='Número Licencia')
     lic_act = models.CharField(max_length=1, choices=OPC_BOOL, verbose_name='Licencia Activa')
-    ini_lic = models.DateField(verbose_name='Fecha Incio Licencia')
+    ini_lic = models.DateField(verbose_name='Fecha Inicio Licencia')
     fin_lic = models.DateField(verbose_name='Fecha Fin Licencia')
 
     class Meta:
