@@ -4,20 +4,20 @@
 
 <div class="content-wrapper">
     <div class="page-header">
-        <h3 class="page-title">Crear Cliente </h3>
-        <a href="{% url 'Listar_Clientes' %}" class="btn btn-success">
+        <h1 class=" text-primary">Crear Cliente </h3>
+        <a href="{% url 'Listar_Clientes' %}" class="btn btn-primary rounded-pill">
             <i class="mdi mdi-arrow-left mx-2"></i>
             Volver
         </a>
       </div>
-    <div class="col-md-12 grid-margin stretch-card">
-        <div class="card">
+    <div class="col-md-12 grid-margin stretch-card rounded-5">
+        <div class="card rounded-5">
           <div class="card-body">
             <h4 class="card-title">Formulario predeterminado</h4>
             <p class="card-description">Diseño de formulario básico</p>
             {{error}}
             <form action="/clientes/crear/" method="POST"  class="forms-sample">
-                <div class="row g-1 ">
+                <div class="row gx-4">
                     {% csrf_token %}
                     <div class="col-md-3">
                         <div class="form-group">

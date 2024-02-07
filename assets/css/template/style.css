@@ -15474,11 +15474,12 @@ code {
   -webkit-box-pack: stretch;
   -ms-flex-pack: stretch;
   justify-content: stretch;
+  box-shadow: 0 5px 10px rgba(0,0,0,.2);
 }
 .stretch-card > .card {
   width: 100%;
   min-width: 100%;
-  border: 10px solid #cbefff30;
+  /* border: 10px solid #cbefff30; */
 }
 
 @media (min-width: 576px) {
@@ -26967,14 +26968,14 @@ footer h4 a, footer .h4 a {
 }
 
 .content-wrapper {
-  /*background: #f2edf3;*/
+  background: #e4e9f7;
   padding: 2.75rem 2.25rem;
   width: 100%;
   -webkit-box-flex: 1;
   -ms-flex-positive: 1;
   flex-grow: 1;
-  background: rgb(224,242,254);
-  background: linear-gradient(90deg, rgba(224,242,254,1) 1%, rgba(240,249,255,1) 35%, rgba(224,242,254,1) 53%, rgba(240,249,255,1) 66%, rgba(240,249,255,1) 79%, rgba(240,249,255,1) 89%, rgba(240,249,255,1) 94%, rgba(224,242,254,1)100%);
+  /* background: rgb(224,242,254);
+  background: linear-gradient(90deg, rgba(224,242,254,1) 1%, rgba(240,249,255,1) 35%, rgba(224,242,254,1) 53%, rgba(240,249,255,1) 66%, rgba(240,249,255,1) 79%, rgba(240,249,255,1) 89%, rgba(240,249,255,1) 94%, rgba(224,242,254,1)100%); */
 }
 /*# sourceMappingURL=style.css.map */
 table.dataTable > tbody > tr.shadow {
