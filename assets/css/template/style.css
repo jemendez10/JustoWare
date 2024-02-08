@@ -25815,7 +25815,8 @@ footer h4 a, footer .h4 a {
   -webkit-transition: width 0.25s ease, background 0.25s ease;
   -moz-transition: width 0.25s ease, background 0.25s ease;
   -ms-transition: width 0.25s ease, background 0.25s ease;
-  background: #05032d;
+  background: #395fb4;
+  /* background: linear-gradient(180deg,#395fb4 32%,#203e7d 70%); */
   width: 260px;
   height: 70px;
 }
@@ -26522,6 +26523,7 @@ footer h4 a, footer .h4 a {
 
 .sidebar-dark .sidebar {
   background: #05032d;
+  background: linear-gradient(180deg,#395fb4 32%,#203e7d 70%);
 }
 .sidebar-dark .sidebar .nav .nav-item .nav-link {
   color: #ffffff;
@@ -26530,7 +26532,7 @@ footer h4 a, footer .h4 a {
   color: inherit;
 }
 .sidebar-dark .sidebar .nav .nav-item .nav-link i.menu-icon {
-  color: rgba(187, 168, 191, 0.9607843137);
+  color: rgb(255 255 255);
 }
 .sidebar-dark .sidebar .nav .nav-item .nav-link i.menu-arrow {
   color: #9e9da0;
@@ -26551,7 +26553,7 @@ footer h4 a, footer .h4 a {
   color: #203e7d;
 }
 .sidebar-dark .sidebar .nav .nav-item:hover {
-  background: #302a3c;
+  background: #557ace;
 }
 .sidebar-dark .sidebar .nav .nav-item.sidebar-actions:hover {
   background: initial;
